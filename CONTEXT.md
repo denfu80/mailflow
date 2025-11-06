@@ -275,6 +275,19 @@ Gemini Analysis → Context Update → UI Refresh
 - Manual Sync Trigger
 - Job Management
 
+### Chat Screen ✅
+- Context-aware conversations with Gemini AI
+- Loads agent context from database automatically
+- Chat history support (last 10 messages)
+- Error handling with Snackbar
+- Real-time responses from processed email data
+
+### Agent Management ✅
+- Delete agents via dropdown menu
+- Activate/Deactivate toggle (affects sync behavior)
+- Edit option (UI ready)
+- Automatic dashboard refresh after actions
+
 ## 📝 Nächste Schritte
 
 ### Android Studio Setup

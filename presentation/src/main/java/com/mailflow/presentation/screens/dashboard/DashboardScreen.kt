@@ -103,7 +103,12 @@ fun DashboardScreen(
                                     name = agent.name,
                                     description = agent.description,
                                     isActive = agent.isActive,
-                                    onClick = { onAgentClick(agent.id) }
+                                    onClick = { onAgentClick(agent.id) },
+                                    onEdit = { /* TODO: Navigate to edit */ },
+                                    onDelete = { viewModel.deleteAgent(agent.id) },
+                                    onToggleActive = { isActive ->
+                                        viewModel.toggleAgentActive(agent.id, isActive)
+                                    }
                                 )
                             }
                         }

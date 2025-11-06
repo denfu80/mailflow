@@ -125,7 +125,7 @@ MailFlow: GmailSyncWorker started
 GmailApiClient: Fetching messages...
 GmailApiClient: Found 15 messages
 MailFlow: Filtered 3 messages for agent: Invoice Processor
-MailFlow: Saved 3 messages to database
+: Saved 3 messages to database
 NotificationManager: Showing sync notification
 ```
 
