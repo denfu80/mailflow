@@ -24,6 +24,7 @@ snakeyaml = "2.3"
 datastore = "1.1.1"
 navigationCompose = "2.8.5"
 material3 = "1.3.1"
+javaxInject = "1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -65,6 +66,8 @@ gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 snakeyaml-engine = { group = "org.snakeyaml", name = "snakeyaml-engine", version.ref = "snakeyaml" }
 
 datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+
+javax-inject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
