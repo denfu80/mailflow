@@ -97,6 +97,7 @@ class SyncEmailsUseCase @Inject constructor(
                 )
             }
 
+            // FIXME: always empty result
             val fetchedMessages = gmailService.fetchNewMessages()
             var totalProcessed = 0
             var totalErrors = 0

@@ -14,7 +14,7 @@ class GeminiClient @Inject constructor(
 ) {
     private val model by lazy {
         GenerativeModel(
-            modelName = "gemini-1.5-flash",
+            modelName = "gemini-2.0-flash-exp",
             apiKey = apiKey,
             generationConfig = generationConfig {
                 temperature = 0.7f
