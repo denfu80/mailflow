@@ -14,7 +14,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val workManagerHelper: WorkManagerHelper
+    private val workManagerHelper: WorkManagerHelper,
+    val gmailAuthHelper: com.mailflow.data.remote.gmail.GmailAuthHelper,
+    val gmailClient: com.mailflow.data.remote.gmail.GmailClient
 ) : ViewModel() {
 
     val syncWorkStatus: StateFlow<WorkStatus> = workManagerHelper.observeSyncWorkInfo()

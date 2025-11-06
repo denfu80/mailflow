@@ -40,6 +40,9 @@ fun SettingsScreen(
     val syncWorkStatus by viewModel.syncWorkStatus.collectAsStateWithLifecycle()
     val allSyncWork by viewModel.allSyncWork.collectAsStateWithLifecycle()
     val allProcessingWork by viewModel.allProcessingWork.collectAsStateWithLifecycle()
+
+    val authHelper = viewModel.gmailAuthHelper
+    val gmailClient = viewModel.gmailClient
     Scaffold(
         topBar = {
             TopAppBar(
@@ -99,13 +102,13 @@ fun SettingsScreen(
                 modifier = Modifier.padding(Spacing.medium)
             )
 
-            SettingsItem(
-                title = "Gmail Account",
-                subtitle = "Connect your Gmail account",
-                onClick = { }
+            GmailAuthCard(
+                authHelper = authHelper,
+                gmailClient = gmailClient,
+                modifier = Modifier.padding(horizontal = Spacing.medium)
             )
 
-            HorizontalDivider()
+            HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.medium))
 
             Text(
                 text = "App Settings",

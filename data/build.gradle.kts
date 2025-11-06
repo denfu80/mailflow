@@ -12,11 +12,23 @@ android {
         minSdk = 26
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        val properties = org.jetbrains.kotlin.konan.properties.Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { properties.load(it) }
+        }
+
+        buildConfigField("String", "GEMINI_API_KEY", "\"${properties.getProperty("GEMINI_API_KEY", "")}\"")
+
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
             arg("room.incremental", "true")
             arg("room.generateKotlin", "true")
         }
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     compileOptions {
@@ -42,6 +54,12 @@ dependencies {
 
     implementation(libs.generativeai)
     implementation(libs.snakeyaml.engine)
+
+    implementation(libs.google.signin)
+    implementation(libs.google.api.client.android)
+    implementation(libs.google.api.services.gmail)
+    implementation(libs.google.http.client.android)
+    implementation(libs.google.api.client.gson)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
