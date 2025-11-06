@@ -1,0 +1,653 @@
+project:
+  name: MailFlow
+  version: 1.0.0
+  start_date: 2025-11-06
+  description: Native Android Mail-Agent-System mit AI-Integration
+
+phases:
+  - phase: 0
+    name: "Project Foundation & Setup"
+    duration: "1-2 Wochen"
+    priority: critical
+    status: pending
+
+    tasks:
+      - id: P0-T1
+        name: "Android Studio Projekt initialisieren"
+        description: "Neues Android Studio Projekt mit Kotlin und Jetpack Compose erstellen"
+        outcome: "Funktionierendes Android Studio Projekt mit Build-Konfiguration"
+        acceptance_criteria:
+          - "Projekt kompiliert erfolgreich"
+          - "Empty Activity läuft auf Emulator/Device"
+          - "Gradle Build unter 30 Sekunden"
+        dependencies: []
+
+      - id: P0-T2
+        name: "Multi-Module Struktur aufsetzen"
+        description: "Module für app, presentation, domain, data, core erstellen"
+        outcome: "Saubere Module-Trennung gemäß Clean Architecture"
+        acceptance_criteria:
+          - "5 Module existieren: app, presentation, domain, data, core"
+          - "Korrekte Gradle Dependencies zwischen Modulen"
+          - "Build erfolgreich mit allen Modulen"
+        dependencies: [P0-T1]
+
+      - id: P0-T3
+        name: "Gradle Dependencies konfigurieren"
+        description: "Version Catalog mit allen benötigten Dependencies erstellen"
+        outcome: "Zentrale Dependency-Verwaltung via libs.versions.toml"
+        acceptance_criteria:
+          - "Compose, Hilt, Room, Retrofit, Gemini SDK eingebunden"
+          - "Keine Dependency-Konflikte"
+          - "Build erfolgreich mit allen Dependencies"
+        dependencies: [P0-T2]
+        libraries:
+          - jetpack_compose: "1.6.0"
+          - hilt: "2.50"
+          - room: "2.6.1"
+          - retrofit: "2.9.0"
+          - gemini_sdk: "latest"
+          - work_manager: "2.9.0"
+
+      - id: P0-T4
+        name: "Google Cloud Console Setup"
+        description: "Gmail API und Gemini API aktivieren, OAuth2 Credentials erstellen"
+        outcome: "API Keys und OAuth2 Client ID verfügbar"
+        acceptance_criteria:
+          - "Gmail API aktiviert"
+          - "Gemini API aktiviert"
+          - "OAuth2 Client ID für Android erstellt"
+          - "google-services.json im Projekt"
+        dependencies: []
+
+      - id: P0-T5
+        name: "Hilt Setup & Dependency Injection"
+        description: "Hilt Application Class und Module-Structure aufsetzen"
+        outcome: "Funktionierendes DI-System in allen Modulen"
+        acceptance_criteria:
+          - "@HiltAndroidApp Application Class existiert"
+          - "Hilt Modules für Network, Database, Repository erstellt"
+          - "ViewModels nutzen @HiltViewModel"
+        dependencies: [P0-T3]
+
+    milestones:
+      - "Projekt läuft auf Android Device"
+      - "Alle Module kompilieren"
+      - "Google APIs sind konfiguriert"
+      - "Hilt Dependency Injection funktioniert"
+
+  - phase: 1
+    name: "Data Layer Implementation"
+    duration: "2-3 Wochen"
+    priority: high
+    status: pending
+
+    tasks:
+      - id: P1-T1
+        name: "Room Database Schema definieren"
+        description: "Entities für MailAgent, EmailMessage, AgentContext, ProcessingJob erstellen"
+        outcome: "Vollständiges Datenbank-Schema mit Relationships"
+        acceptance_criteria:
+          - "4 Entities mit @Entity Annotation"
+          - "DAOs für CRUD-Operationen"
+          - "Database Migrations konfiguriert"
+          - "Room Compiler generiert Code fehlerfrei"
+        dependencies: [P0-T3]
+        entities:
+          - MailAgent:
+              fields: [id, name, description, yamlConfig, isActive, createdAt, updatedAt]
+          - EmailMessage:
+              fields: [id, agentId, messageId, subject, sender, receivedAt, body, processed]
+          - AgentContext:
+              fields: [id, agentId, key, value, type, updatedAt]
+          - ProcessingJob:
+              fields: [id, agentId, status, startTime, endTime, error]
+
+      - id: P1-T2
+        name: "Gmail API Client implementieren"
+        description: "Gmail API Integration mit OAuth2 und Message Fetching"
+        outcome: "Funktionierender Gmail Client für Mail-Synchronisation"
+        acceptance_criteria:
+          - "OAuth2 Login Flow funktioniert"
+          - "Mails können abgerufen werden"
+          - "Pagination für große Mailboxen"
+          - "Error Handling für API Limits"
+        dependencies: [P0-T4]
+
+      - id: P1-T3
+        name: "Gemini API Client implementieren"
+        description: "Gemini SDK Integration für AI-Processing"
+        outcome: "Gemini Client für Mail-Analyse und Chat"
+        acceptance_criteria:
+          - "Gemini Generative Model initialisiert"
+          - "Prompt Engineering für Mail-Analysis"
+          - "Streaming Response Support"
+          - "Error Handling und Retry Logic"
+        dependencies: [P0-T4]
+
+      - id: P1-T4
+        name: "Repository Implementations"
+        description: "Repositories für Agent, Email, Context mit Room und APIs"
+        outcome: "Saubere Abstraction Layer zwischen Data Sources und Domain"
+        acceptance_criteria:
+          - "AgentRepository mit CRUD + YAML Operations"
+          - "EmailRepository mit Gmail Sync"
+          - "ContextRepository für strukturierte Daten"
+          - "Unit Tests für alle Repositories"
+        dependencies: [P1-T1, P1-T2, P1-T3]
+
+      - id: P1-T5
+        name: "YAML Parser Integration"
+        description: "SnakeYAML Android für Agent-Konfiguration"
+        outcome: "Validierung und Parsing von Agent YAML-Files"
+        acceptance_criteria:
+          - "YAML zu AgentConfig Model Mapping"
+          - "Validierung von YAML Struktur"
+          - "Error Messages für invalide Configs"
+          - "Default Templates für neue Agenten"
+        dependencies: [P0-T3]
+        yaml_schema:
+          agent:
+            name: string
+            filters:
+              senders: [string]
+              subjects: [string]
+              has_attachments: boolean
+            gemini_prompt: string
+            context_schema: object
+
+    milestones:
+      - "Room Database erstellt und migrierbar"
+      - "Gmail Mails können abgerufen werden"
+      - "Gemini API antwortet auf Prompts"
+      - "Repositories funktionieren mit Tests"
+
+  - phase: 2
+    name: "Domain Layer & Business Logic"
+    duration: "1-2 Wochen"
+    priority: high
+    status: pending
+
+    tasks:
+      - id: P2-T1
+        name: "Domain Models definieren"
+        description: "Business Logic Models ohne Android/Framework Dependencies"
+        outcome: "Pure Kotlin Domain Models"
+        acceptance_criteria:
+          - "Models für Agent, Email, Context, ProcessingResult"
+          - "Value Objects für Configuration"
+          - "Sealed Classes für States/Results"
+          - "Keine Android Framework Dependencies"
+        dependencies: []
+
+      - id: P2-T2
+        name: "Use Case: Create Agent"
+        description: "Business Logic für Agent-Erstellung mit Validierung"
+        outcome: "CreateAgentUseCase mit YAML Validierung"
+        acceptance_criteria:
+          - "Input Validierung (Name, YAML)"
+          - "Duplicate Check"
+          - "Default Context Schema erstellen"
+          - "Unit Tests mit Mockk"
+        dependencies: [P2-T1, P1-T4]
+
+      - id: P2-T3
+        name: "Use Case: Sync Emails"
+        description: "Gmail Synchronisation mit Agent-Filtering"
+        outcome: "SyncEmailsUseCase für Background Processing"
+        acceptance_criteria:
+          - "Fetch neue Mails via Gmail API"
+          - "Filter nach Agent-Konfiguration"
+          - "Speichern in Room Database"
+          - "Return SyncResult mit Statistics"
+        dependencies: [P2-T1, P1-T4]
+
+      - id: P2-T4
+        name: "Use Case: Process Email with AI"
+        description: "Gemini AI Integration für Mail-Analyse"
+        outcome: "ProcessEmailUseCase für strukturierte Extraktion"
+        acceptance_criteria:
+          - "Gemini Prompt mit Agent Config"
+          - "Strukturierte Antwort parsen"
+          - "Context Update in Database"
+          - "Error Handling für AI Failures"
+        dependencies: [P2-T1, P1-T4]
+
+      - id: P2-T5
+        name: "Use Case: Chat with Agent"
+        description: "Conversational Interface mit Agent Context"
+        outcome: "ChatWithAgentUseCase für natürliche Sprache"
+        acceptance_criteria:
+          - "Context aus Database laden"
+          - "Chat History Management"
+          - "Gemini mit Context Injection"
+          - "Streaming Response Support"
+        dependencies: [P2-T1, P1-T4]
+
+    milestones:
+      - "Use Cases sind testbar ohne UI"
+      - "Business Logic validiert Inputs korrekt"
+      - "AI Processing funktioniert isolated"
+
+  - phase: 3
+    name: "Presentation Layer & UI Components"
+    duration: "3-4 Wochen"
+    priority: high
+    status: pending
+
+    tasks:
+      - id: P3-T1
+        name: "Design System & Theme Setup"
+        description: "Material Design 3 Theme mit Custom Colors und Typography"
+        outcome: "Wiederverwendbares Design System"
+        acceptance_criteria:
+          - "Material3 Theme (Light/Dark)"
+          - "Color Palette definiert"
+          - "Typography Scale"
+          - "Custom Composables (Buttons, Cards, etc.)"
+        dependencies: [P0-T3]
+
+      - id: P3-T2
+        name: "Navigation Setup"
+        description: "Navigation Compose mit NavHost und Routes"
+        outcome: "App-weite Navigation Structure"
+        acceptance_criteria:
+          - "NavHost konfiguriert"
+          - "Sealed Class für Routes"
+          - "Deep Linking Support"
+          - "Back Stack Management"
+        dependencies: [P3-T1]
+        screens:
+          - DashboardScreen: "/"
+          - AgentListScreen: "/agents"
+          - AgentDetailScreen: "/agents/{agentId}"
+          - CreateAgentScreen: "/agents/create"
+          - ChatScreen: "/agents/{agentId}/chat"
+          - SettingsScreen: "/settings"
+
+      - id: P3-T3
+        name: "Dashboard Screen"
+        description: "Übersicht aller Agenten mit Status und Metriken"
+        outcome: "Dashboard mit Agent Cards und Quick Actions"
+        acceptance_criteria:
+          - "LazyColumn mit Agent Cards"
+          - "Pull-to-Refresh für Sync"
+          - "FAB für neuen Agent"
+          - "Status Indicators (Active/Inactive)"
+        dependencies: [P3-T2, P2-T5]
+
+      - id: P3-T4
+        name: "Agent Creation Screen"
+        description: "Formular für neue Agent-Erstellung"
+        outcome: "Multi-Step Form mit YAML Editor"
+        acceptance_criteria:
+          - "Step 1: Basic Info (Name, Beschreibung)"
+          - "Step 2: Email Filter Configuration"
+          - "Step 3: YAML Editor mit Syntax Highlighting"
+          - "Step 4: Preview und Validierung"
+          - "Real-time Validierung"
+        dependencies: [P3-T2, P2-T2]
+
+      - id: P3-T5
+        name: "Chat Interface Screen"
+        description: "Conversational UI für Agent Interaction"
+        outcome: "Chat Screen mit Message History"
+        acceptance_criteria:
+          - "LazyColumn für Chat Messages"
+          - "TextField für User Input"
+          - "Loading Indicator für AI Response"
+          - "Markdown Rendering für Antworten"
+          - "Copy/Share Actions"
+        dependencies: [P3-T2, P2-T5]
+
+      - id: P3-T6
+        name: "ViewModels & State Management"
+        description: "ViewModels mit StateFlow für alle Screens"
+        outcome: "Reactive State Management ohne Memory Leaks"
+        acceptance_criteria:
+          - "ViewModel pro Screen mit @HiltViewModel"
+          - "StateFlow für UI State"
+          - "SharedFlow für One-Time Events"
+          - "Coroutine Scope Management"
+        dependencies: [P3-T3, P3-T4, P3-T5]
+
+      - id: P3-T7
+        name: "Settings Screen"
+        description: "App Configuration und Gmail Account Management"
+        outcome: "Settings mit DataStore Persistence"
+        acceptance_criteria:
+          - "Gmail Account Status"
+          - "Sync Frequency Configuration"
+          - "Theme Selection (Light/Dark/Auto)"
+          - "About Section"
+        dependencies: [P3-T2]
+
+    milestones:
+      - "Alle 6 Main Screens implementiert"
+      - "Navigation funktioniert flüssig"
+      - "Material Design 3 durchgängig"
+      - "State Management ohne Crashes"
+
+  - phase: 4
+    name: "Background Processing & WorkManager"
+    duration: "1-2 Wochen"
+    priority: medium
+    status: pending
+
+    tasks:
+      - id: P4-T1
+        name: "Gmail Sync Worker"
+        description: "PeriodicWorkRequest für automatische Mail-Synchronisation"
+        outcome: "Zuverlässiger Background Sync alle 15-60 Minuten"
+        acceptance_criteria:
+          - "Worker läuft auch bei App-Kill"
+          - "Constraints: Network Connected, Battery Not Low"
+          - "Exponential Backoff bei Failures"
+          - "Notification bei neuen Mails"
+        dependencies: [P2-T3]
+
+      - id: P4-T2
+        name: "Email Processing Worker"
+        description: "OneTimeWorkRequest für AI-Processing nach Sync"
+        outcome: "Automatische Verarbeitung neuer Mails"
+        acceptance_criteria:
+          - "Chain nach Sync Worker"
+          - "Batch Processing von Mails"
+          - "Progress Notification"
+          - "Error Recovery"
+        dependencies: [P2-T4, P4-T1]
+
+      - id: P4-T3
+        name: "WorkManager Monitoring"
+        description: "UI für Background Job Status"
+        outcome: "Live Status von Background Tasks"
+        acceptance_criteria:
+          - "WorkInfo Flow Observable"
+          - "Status Display in Settings"
+          - "Manual Trigger Option"
+          - "Cancel Running Jobs"
+        dependencies: [P4-T1, P4-T2, P3-T7]
+
+      - id: P4-T4
+        name: "Notification System"
+        description: "Rich Notifications für neue Mails und Processing"
+        outcome: "Notification Channels mit Actions"
+        acceptance_criteria:
+          - "Channel für New Mails"
+          - "Channel für Processing Status"
+          - "Deep Links zu Chat Screen"
+          - "Action Buttons (Archive, Reply)"
+        dependencies: [P4-T2]
+
+    milestones:
+      - "Background Sync läuft zuverlässig"
+      - "Mails werden automatisch verarbeitet"
+      - "Notifications funktionieren korrekt"
+
+  - phase: 5
+    name: "Testing & Quality Assurance"
+    duration: "2 Wochen"
+    priority: high
+    status: pending
+
+    tasks:
+      - id: P5-T1
+        name: "Unit Tests für Domain Layer"
+        description: "JUnit + Mockk Tests für alle Use Cases"
+        outcome: "Test Coverage > 80% für Domain Layer"
+        acceptance_criteria:
+          - "Tests für alle Use Cases"
+          - "Edge Cases abgedeckt"
+          - "Mocking von Repositories"
+          - "Fast Tests (< 1s pro Test)"
+        dependencies: [P2-T5]
+
+      - id: P5-T2
+        name: "Repository Tests"
+        description: "Room Database Tests mit In-Memory DB"
+        outcome: "Verifizierte Datenpersistenz"
+        acceptance_criteria:
+          - "Tests für alle DAO Operations"
+          - "Transaction Tests"
+          - "Migration Tests"
+          - "Concurrent Access Tests"
+        dependencies: [P1-T4]
+
+      - id: P5-T3
+        name: "Compose UI Tests"
+        description: "UI Tests mit ComposeTestRule"
+        outcome: "Automatisierte UI Tests für kritische Flows"
+        acceptance_criteria:
+          - "Navigation Flow Tests"
+          - "Agent Creation Flow Test"
+          - "Chat Interaction Test"
+          - "Tests laufen auf Emulator"
+        dependencies: [P3-T7]
+
+      - id: P5-T4
+        name: "Integration Tests"
+        description: "End-to-End Tests für komplette User Journeys"
+        outcome: "Happy Path und Error Cases getestet"
+        acceptance_criteria:
+          - "Create Agent → Sync → Process → Chat"
+          - "Error Scenarios (Network Fail, API Limit)"
+          - "Tests mit Hilt Test"
+          - "Screenshot Tests"
+        dependencies: [P5-T1, P5-T2, P5-T3]
+
+      - id: P5-T5
+        name: "Performance Testing"
+        description: "Profiling und Optimierung"
+        outcome: "App Performance Benchmarks erfüllt"
+        acceptance_criteria:
+          - "Startup Time < 2s"
+          - "Frame Rate > 60 FPS"
+          - "Memory Usage < 100MB"
+          - "Battery Impact minimal"
+        dependencies: [P4-T4]
+
+      - id: P5-T6
+        name: "Code Quality Tools"
+        description: "Detekt + Ktlint Setup"
+        outcome: "Automatische Code Quality Checks"
+        acceptance_criteria:
+          - "Detekt Rules konfiguriert"
+          - "Ktlint formatiert automatisch"
+          - "Pre-commit Hooks"
+          - "CI Integration vorbereitet"
+        dependencies: [P0-T5]
+
+    milestones:
+      - "80%+ Test Coverage"
+      - "UI Tests laufen automatisiert"
+      - "Performance Benchmarks erfüllt"
+      - "Code Quality >= A Rating"
+
+  - phase: 6
+    name: "Security & Production Readiness"
+    duration: "1 Woche"
+    priority: critical
+    status: pending
+
+    tasks:
+      - id: P6-T1
+        name: "Token Encryption"
+        description: "EncryptedSharedPreferences für OAuth Tokens"
+        outcome: "Sichere Speicherung sensibler Daten"
+        acceptance_criteria:
+          - "EncryptedSharedPreferences implementiert"
+          - "Master Key mit Android Keystore"
+          - "Token Migration von SharedPrefs"
+          - "Backup Exclusion Rules"
+        dependencies: [P1-T2]
+
+      - id: P6-T2
+        name: "ProGuard/R8 Configuration"
+        description: "Code Obfuscation für Release Build"
+        outcome: "Optimierter und obfuscated APK"
+        acceptance_criteria:
+          - "R8 Rules für Retrofit, Room, Hilt"
+          - "APK Size Reduktion > 30%"
+          - "Release Build läuft stabil"
+          - "Mapping File für Crash Reports"
+        dependencies: [P5-T6]
+
+      - id: P6-T3
+        name: "Security Audit"
+        description: "OWASP Mobile Security Checklist"
+        outcome: "Security Best Practices implementiert"
+        acceptance_criteria:
+          - "Network Security Config (HTTPS only)"
+          - "Certificate Pinning für APIs"
+          - "SQL Injection Prevention (Room Params)"
+          - "No Hardcoded Secrets"
+        dependencies: [P6-T1]
+
+      - id: P6-T4
+        name: "Crash Reporting Setup"
+        description: "Firebase Crashlytics Integration"
+        outcome: "Production Crash Monitoring"
+        acceptance_criteria:
+          - "Crashlytics SDK integriert"
+          - "Custom Keys für Debug Info"
+          - "User Consent für Analytics"
+          - "Test Crash funktioniert"
+        dependencies: [P6-T2]
+
+      - id: P6-T5
+        name: "Release Build Configuration"
+        description: "Signing Config und Play Store Vorbereitung"
+        outcome: "Signierbarer Release APK"
+        acceptance_criteria:
+          - "Keystore generiert"
+          - "Build Variants konfiguriert"
+          - "Version Bump Automation"
+          - "Play Store Metadata erstellt"
+        dependencies: [P6-T2, P6-T3]
+
+    milestones:
+      - "Tokens sicher verschlüsselt"
+      - "Release Build erfolgreich"
+      - "Security Audit bestanden"
+      - "Bereit für Play Store Upload"
+
+  - phase: 7
+    name: "Polish & Launch Preparation"
+    duration: "1 Woche"
+    priority: medium
+    status: pending
+
+    tasks:
+      - id: P7-T1
+        name: "Onboarding Flow"
+        description: "First-Time User Experience"
+        outcome: "Intuitive App-Einführung"
+        acceptance_criteria:
+          - "Welcome Screen mit Features"
+          - "Gmail Sign-In Tutorial"
+          - "Agent Creation Wizard"
+          - "Skip Option für Power Users"
+        dependencies: [P3-T7]
+
+      - id: P7-T2
+        name: "Empty States & Placeholders"
+        description: "UX für leere Listen und Fehlerzustände"
+        outcome: "Hilfreiche UI für alle Edge Cases"
+        acceptance_criteria:
+          - "No Agents Placeholder"
+          - "No Messages Placeholder"
+          - "Error States mit Retry Button"
+          - "Skeleton Loaders"
+        dependencies: [P3-T7]
+
+      - id: P7-T3
+        name: "Animations & Transitions"
+        description: "Smooth UI Animations mit Compose"
+        outcome: "Polierte User Experience"
+        acceptance_criteria:
+          - "Screen Transitions"
+          - "List Item Animations"
+          - "Loading Animations"
+          - "Shared Element Transitions"
+        dependencies: [P7-T2]
+
+      - id: P7-T4
+        name: "Accessibility Improvements"
+        description: "TalkBack und Content Descriptions"
+        outcome: "Barrierefreie App"
+        acceptance_criteria:
+          - "Content Descriptions für Icons"
+          - "Semantic Properties"
+          - "TalkBack Testing"
+          - "Min Touch Target 48dp"
+        dependencies: [P7-T3]
+
+      - id: P7-T5
+        name: "Documentation & Help"
+        description: "In-App Help und externe Dokumentation"
+        outcome: "Selbsterklärende App"
+        acceptance_criteria:
+          - "YAML Editor Help Dialog"
+          - "FAQ Section in Settings"
+          - "README für GitHub"
+          - "Video Tutorial (optional)"
+        dependencies: [P7-T1]
+
+    milestones:
+      - "Onboarding vollständig"
+      - "UX poliert und smooth"
+      - "Accessibility Standards erfüllt"
+      - "Dokumentation komplett"
+
+success_criteria:
+  technical:
+    - "App startet in < 2 Sekunden"
+    - "Background Sync Reliability > 99%"
+    - "Chat Response < 3 Sekunden"
+    - "Memory Usage < 100MB"
+    - "Crash Free Rate > 99.5%"
+
+  user_experience:
+    - "Agent Creation in < 5 Schritten"
+    - "Intuitive Chat Interface"
+    - "Offline Context Access funktioniert"
+    - "Battery Impact < 2% pro Tag"
+
+  quality:
+    - "Unit Test Coverage > 80%"
+    - "UI Test Coverage für kritische Flows"
+    - "Detekt Grade A"
+    - "Play Store Rating Target > 4.0"
+
+future_phases:
+  phase_8:
+    name: "Advanced Features (Post-Launch)"
+    features:
+      - "Todo-System Integration"
+      - "Kalender-Anbindung"
+      - "Advanced Analytics Dashboard"
+      - "Agent Templates Marketplace"
+
+  phase_9:
+    name: "Enterprise Features"
+    features:
+      - "Multi-Account Support"
+      - "Team-Sharing von Agenten"
+      - "Cloud-Backup & Sync"
+      - "Third-Party API"
+
+  phase_10:
+    name: "Platform Expansion"
+    features:
+      - "iOS App (Kotlin Multiplatform)"
+      - "Web Dashboard"
+      - "Desktop Client"
+      - "Browser Extension"
+
+notes:
+  - "Jede Phase hat klare Acceptance Criteria"
+  - "Dependencies zwischen Tasks beachten"
+  - "Tests parallel zur Implementierung schreiben"
+  - "Regelmäßige Builds auf echten Devices testen"
+  - "Security von Anfang an mitdenken"
+  - "Performance Monitoring in allen Phasen"
