@@ -17,22 +17,21 @@ data class CreateAgentUiState(
                 yamlConfig.isNotBlank()
 
     companion object {
-        const val DEFAULT_YAML_CONFIG = """
-agent:
-  name: "My Agent"
-  description: "Agent description"
+        const val DEFAULT_YAML_CONFIG = """agent:
+  name: "My Email Agent"
+  description: "Processes emails and extracts information"
 
 filters:
   senders: []
   subjects: []
   hasAttachments: false
 
-processing:
-  prompt: "Analyze this email and extract key information"
-  extractFields:
-    - summary
-    - action_items
-    - priority
+gemini_prompt: "Analyze this email and extract key information. Provide a summary, list any action items, and determine the priority level."
+
+context_schema:
+  summary: string
+  action_items: list
+  priority: string
 """
     }
 }

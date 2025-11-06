@@ -13,7 +13,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CreateAgentViewModel @Inject constructor(
-    private val agentRepository: AgentRepository
+    private val agentRepository: AgentRepository,
+    private val validateYamlUseCase: com.mailflow.domain.usecase.ValidateYamlUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreateAgentUiState())
@@ -46,9 +47,15 @@ class CreateAgentViewModel @Inject constructor(
     }
 
     private fun validateYaml(yaml: String): String? {
-        return when {
-            yaml.isBlank() -> "YAML configuration cannot be empty"
-            else -> null
+        if (yaml.isBlank()) {
+            return "YAML configuration cannot be empty"
+        }
+
+        val result = validateYamlUseCase(yaml)
+        return when (result) {
+            is com.mailflow.domain.model.ProcessingResult.Success -> null
+            is com.mailflow.domain.model.ProcessingResult.Error -> result.error.message
+            is com.mailflow.domain.model.ProcessingResult.Loading -> null
         }
     }
 
