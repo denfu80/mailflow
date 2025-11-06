@@ -40,6 +40,9 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 
+    implementation(libs.generativeai)
+    implementation(libs.snakeyaml.engine)
+
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
