@@ -52,7 +52,7 @@
 ### Wichtige Dateien:
 ```
 local.properties
-├── GEMINI_API_KEY=AIzaSyCafTF9ygLdjvrVqsFK4k7aZ0K2IJKwTE4
+├── GEMINI_API_KEY=AIzaSyCafTF9ygLdjvrVqsFK4k7aZ0K2IJKwTE4 //e.g.
 
 Google Cloud Console
 ├── OAuth Client ID: Automatisch via SHA-1
