@@ -21,4 +21,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "MailFlow"
 include(":app")
+include(":presentation")
+include(":domain")
+include(":data")
+include(":core")
  
