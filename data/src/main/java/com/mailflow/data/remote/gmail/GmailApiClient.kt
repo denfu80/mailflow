@@ -1,6 +1,7 @@
 package com.mailflow.data.remote.gmail
 
 import android.content.Context
+import android.util.Log
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -21,6 +22,10 @@ class GmailApiClient @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private var gmailService: Gmail? = null
+
+    companion object {
+        private const val TAG = "GmailApiClient"
+    }
 
     fun getSignInOptions(): GoogleSignInOptions {
         return GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -67,9 +72,26 @@ class GmailApiClient @Inject constructor(
         maxResults: Long = 100
     ): Result<List<GmailClient.GmailMessage>> = withContext(Dispatchers.IO) {
         try {
-            val service = gmailService
-                ?: return@withContext Result.failure(IllegalStateException("Gmail service not initialized. Please sign in first."))
+            var service = gmailService
 
+            if (service == null) {
+                Log.d(TAG, "Gmail service is null, attempting to re-initialize")
+                val account = getSignedInAccount()
+                if (account != null) {
+                    Log.d(TAG, "Found signed-in account: ${account.email}")
+                    initializeService(account)
+                    service = gmailService
+                } else {
+                    Log.w(TAG, "No signed-in account found")
+                }
+            }
+
+            if (service == null) {
+                Log.e(TAG, "Gmail service could not be initialized")
+                return@withContext Result.failure(IllegalStateException("Gmail service not initialized. Please sign in first."))
+            }
+
+            Log.d(TAG, "Fetching messages with query: $query, maxResults: $maxResults")
             val messagesResponse = service.users()
                 .messages()
                 .list("me")
@@ -79,7 +101,12 @@ class GmailApiClient @Inject constructor(
                 }
                 .execute()
 
-            val messages = messagesResponse.messages ?: return@withContext Result.success(emptyList())
+            val messages = messagesResponse.messages
+            Log.d(TAG, "Fetched ${messages?.size ?: 0} message IDs from Gmail API")
+
+            if (messages == null) {
+                return@withContext Result.success(emptyList())
+            }
 
             val detailedMessages = messages.mapNotNull { message ->
                 try {
@@ -115,20 +142,34 @@ class GmailApiClient @Inject constructor(
                         hasAttachments = hasAttachments
                     )
                 } catch (e: Exception) {
+                    Log.e(TAG, "Error fetching message details: ${e.message}", e)
                     null
                 }
             }
 
+            Log.d(TAG, "Successfully fetched ${detailedMessages.size} detailed messages")
             Result.success(detailedMessages)
         } catch (e: Exception) {
+            Log.e(TAG, "Error in fetchMessages: ${e.message}", e)
             Result.failure(e)
         }
     }
 
     suspend fun markAsRead(messageId: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            val service = gmailService
-                ?: return@withContext Result.failure(IllegalStateException("Gmail service not initialized"))
+            var service = gmailService
+
+            if (service == null) {
+                val account = getSignedInAccount()
+                if (account != null) {
+                    initializeService(account)
+                    service = gmailService
+                }
+            }
+
+            if (service == null) {
+                return@withContext Result.failure(IllegalStateException("Gmail service not initialized"))
+            }
 
             val modifyRequest = com.google.api.services.gmail.model.ModifyMessageRequest()
                 .setRemoveLabelIds(listOf("UNREAD"))

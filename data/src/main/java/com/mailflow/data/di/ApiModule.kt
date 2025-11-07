@@ -1,5 +1,6 @@
 package com.mailflow.data.di
 
+import com.mailflow.core.util.RateLimiter
 import com.mailflow.data.BuildConfig
 import com.mailflow.data.remote.gemini.GeminiClient
 import com.mailflow.data.remote.gemini.GeminiServiceImpl
@@ -24,8 +25,17 @@ object ApiModule {
 
     @Provides
     @Singleton
-    fun provideGeminiClient(apiKey: String): GeminiClient {
-        return GeminiClient(apiKey)
+    fun provideGeminiRateLimiter(): RateLimiter {
+        return RateLimiter.perMinute(10)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGeminiClient(
+        apiKey: String,
+        rateLimiter: RateLimiter
+    ): GeminiClient {
+        return GeminiClient(apiKey, rateLimiter)
     }
 
     @Provides

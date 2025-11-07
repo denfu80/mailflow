@@ -100,10 +100,13 @@ class ProcessEmailUseCase @Inject constructor(
                 return ProcessingResult.Success(0)
             }
 
+            val batchSize = 10
+            val messagesToProcess = unprocessedMessages.take(batchSize)
+
             var successCount = 0
             var errorCount = 0
 
-            unprocessedMessages.forEach { email ->
+            messagesToProcess.forEachIndexed { index, email ->
                 val result = invoke(agentId, email.id)
                 when (result) {
                     is ProcessingResult.Success -> successCount++

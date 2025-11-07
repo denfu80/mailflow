@@ -1,17 +1,27 @@
 package com.mailflow.data.remote.gemini
 
+import android.util.Log
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import com.google.ai.client.generativeai.type.generationConfig
+import com.mailflow.core.util.RateLimiter
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.random.Random
 
 @Singleton
 class GeminiClient @Inject constructor(
-    private val apiKey: String
+    private val apiKey: String,
+    private val rateLimiter: RateLimiter
 ) {
+    companion object {
+        private const val TAG = "GeminiClient"
+        private const val MIN_DELAY_MS = 2000L
+        private const val MAX_DELAY_MS = 3000L
+    }
     private val model by lazy {
         GenerativeModel(
             modelName = "gemini-2.0-flash-exp",
@@ -27,9 +37,18 @@ class GeminiClient @Inject constructor(
 
     suspend fun generateContent(prompt: String): Result<String> {
         return try {
+            rateLimiter.acquire()
+            Log.d(TAG, "Acquired rate limit token. Remaining: ${rateLimiter.getRemainingRequests()}")
+
             val response = model.generateContent(prompt)
+
+            val delayMs = Random.nextLong(MIN_DELAY_MS, MAX_DELAY_MS)
+            Log.d(TAG, "Request completed. Delaying for ${delayMs}ms")
+            delay(delayMs)
+
             Result.success(response.text ?: "")
         } catch (e: Exception) {
+            Log.e(TAG, "Error generating content: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -40,10 +59,18 @@ class GeminiClient @Inject constructor(
         context: Map<String, Any> = emptyMap()
     ): Result<String> {
         return try {
+            rateLimiter.acquire()
+            Log.d(TAG, "Acquired rate limit token for context generation")
+
             val fullPrompt = buildPromptWithContext(systemPrompt, userPrompt, context)
             val response = model.generateContent(fullPrompt)
+
+            val delayMs = Random.nextLong(MIN_DELAY_MS, MAX_DELAY_MS)
+            delay(delayMs)
+
             Result.success(response.text ?: "")
         } catch (e: Exception) {
+            Log.e(TAG, "Error generating content with context: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -55,6 +82,9 @@ class GeminiClient @Inject constructor(
         contextSchema: Map<String, String>
     ): Result<String> {
         return try {
+            rateLimiter.acquire()
+            Log.d(TAG, "Acquired rate limit token for email analysis. Subject: $emailSubject")
+
             val prompt = buildEmailAnalysisPrompt(
                 emailSubject = emailSubject,
                 emailBody = emailBody,
@@ -62,8 +92,14 @@ class GeminiClient @Inject constructor(
                 contextSchema = contextSchema
             )
             val response = model.generateContent(prompt)
+
+            val delayMs = Random.nextLong(MIN_DELAY_MS, MAX_DELAY_MS)
+            Log.d(TAG, "Email analysis completed. Delaying for ${delayMs}ms")
+            delay(delayMs)
+
             Result.success(response.text ?: "")
         } catch (e: Exception) {
+            Log.e(TAG, "Error analyzing email: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -79,6 +115,9 @@ class GeminiClient @Inject constructor(
         chatHistory: List<ChatMessage> = emptyList()
     ): Result<String> {
         return try {
+            rateLimiter.acquire()
+            Log.d(TAG, "Acquired rate limit token for chat")
+
             val chat = model.startChat(
                 history = chatHistory.map { message ->
                     content(message.role) {
@@ -94,8 +133,13 @@ class GeminiClient @Inject constructor(
             }
 
             val response = chat.sendMessage(fullMessage)
+
+            val delayMs = Random.nextLong(MIN_DELAY_MS, MAX_DELAY_MS)
+            delay(delayMs)
+
             Result.success(response.text ?: "")
         } catch (e: Exception) {
+            Log.e(TAG, "Error in chat: ${e.message}", e)
             Result.failure(e)
         }
     }
