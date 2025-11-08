@@ -17,7 +17,7 @@ phases:
     name: "Refactoring & Simplification"
     duration: "1 Woche"
     priority: critical
-    status: pending
+    status: completed
     description: "Remove all code related to the multi-agent and chat functionalities to create a clean slate for the new features."
 
     tasks:
