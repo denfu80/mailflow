@@ -34,7 +34,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun GmailAuthCard(
     authHelper: GmailAuthHelper,
-    gmailClient: GmailClient,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -50,7 +49,6 @@ fun GmailAuthCard(
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
                 val account = task.getResult(ApiException::class.java)
-                gmailClient.initializeWithAccount(account)
                 isSignedIn = true
                 accountEmail = account.email
                 errorMessage = null

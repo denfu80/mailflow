@@ -7,16 +7,7 @@ import androidx.room.Index
 
 @Entity(
     tableName = "email_messages",
-    foreignKeys = [
-        ForeignKey(
-            entity = MailAgentEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["agentId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ],
     indices = [
-        Index(value = ["agentId"]),
         Index(value = ["messageId"], unique = true),
         Index(value = ["processed"])
     ]
@@ -24,7 +15,6 @@ import androidx.room.Index
 data class EmailMessageEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val agentId: Long,
     val messageId: String,
     val subject: String,
     val sender: String,

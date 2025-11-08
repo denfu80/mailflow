@@ -1,52 +1,46 @@
 package com.mailflow.data.di
 
-import com.mailflow.core.util.RateLimiter
-import com.mailflow.data.BuildConfig
-import com.mailflow.data.remote.gemini.GeminiClient
-import com.mailflow.data.remote.gemini.GeminiServiceImpl
-import com.mailflow.data.remote.gmail.GmailServiceImpl
-import com.mailflow.domain.usecase.GeminiService
-import com.mailflow.domain.usecase.GmailService
+import com.mailflow.data.remote.api.TodoApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object ApiModule {
 
+    private const val TODO_API_BASE_URL = "https://doeasy-topaz.vercel.app/api/"
+
     @Provides
     @Singleton
-    fun provideGeminiApiKey(): String {
-        return BuildConfig.GEMINI_API_KEY
+    fun provideOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            })
+            .build()
     }
 
     @Provides
     @Singleton
-    fun provideGeminiRateLimiter(): RateLimiter {
-        return RateLimiter.perMinute(10)
+    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(TODO_API_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
     }
 
     @Provides
     @Singleton
-    fun provideGeminiClient(
-        apiKey: String,
-        rateLimiter: RateLimiter
-    ): GeminiClient {
-        return GeminiClient(apiKey, rateLimiter)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGeminiService(geminiClient: GeminiClient): GeminiService {
-        return GeminiServiceImpl(geminiClient)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGmailService(gmailServiceImpl: GmailServiceImpl): GmailService {
-        return gmailServiceImpl
+    fun provideTodoApiService(retrofit: Retrofit): TodoApiService {
+        return retrofit.create(TodoApiService::class.java)
     }
 }
+

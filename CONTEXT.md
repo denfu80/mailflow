@@ -1,30 +1,25 @@
-# MailFlow - Android Mail-Agent-System
+# MailFlow - AI-Powered Todo Extraction from Gmail
 
 ## 📋 Projekt-Übersicht
 
-**MailFlow** ist eine native Android App, die als intelligentes Mail-Processing-System fungiert. Die App ermöglicht es Benutzern, dynamische AI-Agenten zu erstellen, die eingehende Gmail-Nachrichten automatisch verarbeiten, analysieren und strukturierte Kontexte pflegen. Jeder Agent kann über ein Chat-Interface für natürliche Interaktionen genutzt werden.
+**MailFlow** ist eine native Android App, die den Gmail-Posteingang eines Benutzers automatisch überwacht, um aus neuen E-Mails Aufgaben (Todos) zu extrahieren. Ein vordefinierter KI-Agent analysiert die E-Mails und sendet die erkannten Aufgaben an eine vom Benutzer konfigurierte externe To-Do-Listen-Anwendung.
 
 ## 🎯 Kernfunktionalitäten
 
 ### Mail-Processing Pipeline
-- Automatische Gmail-Synchronisation im Hintergrund
-- Dynamische Agent-Konfiguration via YAML-Files
-- Google Gemini AI-Integration für Mail-Analyse
-- Strukturierte Kontext-Speicherung pro Agent
+- **Automatische Gmail-Synchronisation:** Überprüft den Posteingang im Hintergrund regelmäßig auf neue E-Mails.
+- **KI-gestützte Aufgaben-Extraktion:** Nutzt Google Gemini, um den Inhalt neuer E-Mails zu analysieren und potenzielle Aufgaben zu identifizieren.
+- **Integration externer Todo-Apps:** Sendet extrahierte Aufgaben über eine Web-API an eine vom Benutzer festgelegte To-Do-Anwendung.
+- **Benachrichtigungen:** Informiert den Benutzer, wenn neue Aufgaben erfolgreich erstellt wurden.
 
-### Agent-System
-- Benutzer können neue Agenten über UI erstellen
-- Jeder Agent hat spezifische Email-Filter (Absender, Betreff, Anhänge)
-- Konfigurierbare Gemini-Prompts für individuelle Verarbeitung
-- Lokale YAML-Context-Files pro Agent
-
-### Chat-Interface
-- Dedicated Chat-Screen pro Agent
-- Interaction mit Agent-spezifischen Kontexten
-- Gemini-basierte Konversation über gesammelte Mail-Daten
-- Zukunft: Todo-Erstellung, Kalender-Integration
+### Konfiguration
+- **Einfache Einrichtung:** Der Benutzer muss nur sein Gmail-Konto verbinden.
+- **Konfigurierbarer Listenname:** Der Name der Zielliste in der Todo-App kann in den Einstellungen festgelegt werden.
+- **(Zukunft):** Konfiguration des API-Endpunkts und der Authentifizierung.
 
 ## 🏗️ Technische Architektur
+
+Die App folgt weiterhin einem Clean Architecture-Muster mit einem Multi-Modul-Setup.
 
 ### Clean Architecture Pattern
 ```
@@ -39,9 +34,10 @@ Domain Layer (Business Logic)
 └── Domain Models
 
 Data Layer
-├── Room Database (lokale Speicherung)
+├── Room Database (für Verarbeitungs-Logs)
 ├── Gmail API Client
 ├── Gemini API Client
+├── Todo API Client (NEU)
 └── Repository Implementations
 ```
 
@@ -56,253 +52,49 @@ app/
 
 ## 📱 UI/UX Konzept
 
+Das UI/UX-Konzept wird stark vereinfacht.
+
 ### Screen-Flow
-1. **Dashboard** - Übersicht aller Agenten mit Status
-2. **Agent Management** - Erstellen/Bearbeiten von Agenten
-3. **Agent Configuration** - YAML-Editor für Agent-Setup
-4. **Chat Interface** - Conversational UI pro Agent
-5. **Settings** - App-Konfiguration, Gmail-Auth
+1.  **Activity Log (Hauptbildschirm):** Zeigt eine Liste der letzten Aktivitäten an (z.B. "Letzte Synchronisierung um 10:30", "1 neues Todo erstellt").
+2.  **Settings:** App-Konfiguration, Gmail-Authentifizierung und Eingabe des Namens für die Todo-Liste.
 
 ### Design System
 - Material Design 3 mit Jetpack Compose
 - Dark/Light Theme Support
-- Responsive Layout für verschiedene Screen-Größen
-- Accessibility-optimiert
 
 ## 🔧 Tech Stack & Dependencies
 
-### Core Android
-- **Kotlin** - Programmiersprache
-- **Jetpack Compose** - Moderne UI-Entwicklung
-- **Navigation Compose** - App-Navigation
-- **ViewModel & StateFlow** - State Management
+Der Kern des Tech-Stacks bleibt erhalten, aber einige spezifische Abhängigkeiten werden entfernt.
 
-### Dependency Injection
-- **Hilt** - Dependency Injection Framework
-- **Hilt Navigation Compose** - ViewModel Integration
-
-### Database & Storage
-- **Room Database** - Lokale SQLite-Abstraktion
-- **DataStore** - Settings & Preferences
-- **YAML Parser** - Agent-Konfiguration (SnakeYAML Android)
-
-### Background Processing
-- **WorkManager** - Reliable Background Tasks
-- **Coroutines** - Asynchrone Programmierung
-- **Flow** - Reactive Streams
+- **Entfernt:** YAML Parser.
+- **Hinzugefügt:** Eine Retrofit-Implementierung für die neue Todo-API.
 
 ### API Integration
-- **Gmail API** - Mail-Zugriff (Google APIs Client)
+- **Gmail API** - Mail-Zugriff
 - **Google Sign-In** - OAuth2 Authentication
-- **Gemini API** - AI-Processing (Generative AI SDK)
-- **Retrofit** - HTTP Client für APIs
-- **OkHttp** - Network Layer
-
-### Testing
-- **JUnit** - Unit Testing
-- **Mockk** - Mocking Framework
-- **Compose UI Testing** - UI Tests
-- **Room Testing** - Database Tests
+- **Gemini API** - KI-Verarbeitung
+- **Retrofit** - HTTP Client für die Todo-API (siehe [API-Dokumentation](docs/API_DOCS.md))
 
 ## 📊 Datenmodell
 
+Das lokale Datenmodell wird drastisch vereinfacht.
+
 ### Entities
-- **MailAgent** - Agent-Konfiguration und Metadaten
-- **EmailMessage** - Verarbeitete Mail-Daten
-- **AgentContext** - Strukturierte Kontext-Einträge
-- **ProcessingJob** - Background-Task Status
+- **EmailMessage:** Speichert eine Referenz auf bereits verarbeitete E-Mails, um Duplikate zu vermeiden.
+- **ProcessingLog:** Ein einfacher Log-Eintrag für UI-Zwecke (z.B. "Sync um 10:30, 2 Todos gefunden").
 
 ### Data Flow
 ```
-Gmail API → Background Sync → Agent Processing →
-Gemini Analysis → Context Update → UI Refresh
+Gmail API → Background Sync → KI-Analyse (Gemini) → Todo-Extraktion → Todo API Client → Externe Web App
 ```
 
-## 🔐 Sicherheit & Permissions
+## 🚀 Entwicklungsplan (Neuausrichtung)
 
-### Android Permissions
-- INTERNET - API-Zugriff
-- WAKE_LOCK - Background Processing
-- RECEIVE_BOOT_COMPLETED - Auto-Start nach Reboot
+1.  **Bereinigung:** Entfernen der alten UI (Agenten-Verwaltung, Chat) und der zugehörigen Logik (Use Cases, Repositories).
+2.  **API-Abstraktion:** Erstellen einer Schnittstelle für den `TodoApiClient`.
+3.  **Logik anpassen:** Anpassen des `ProcessEmailUseCase` zur reinen Todo-Extraktion und zum Aufruf des `TodoApiClient`.
+4.  **UI neu erstellen:** Implementieren des einfachen Activity Logs und Anpassen des Einstellungsbildschirms.
+5.  **Notifications:** Anpassen der Benachrichtigungen für erstellte Todos.
+6.  **Integration:** Implementieren des echten `TodoApiClient` mit Retrofit, sobald die API-Spezifikation vorliegt.
 
-### OAuth2 Scopes
-- Gmail Read/Modify - Mail-Zugriff
-- UserInfo Profile - Benutzer-Identifikation
-
-### Data Protection
-- Lokale Verschlüsselung sensibler Daten
-- Sichere Token-Speicherung mit EncryptedSharedPreferences
-- HTTPS-only API Communication
-
-## 🚀 Development Workflow
-
-### Build Configuration
-- **Gradle Kotlin DSL** - Build Scripts
-- **Version Catalogs** - Dependency Management
-- **Build Variants** - Debug/Release/Staging
-- **ProGuard/R8** - Code Obfuscation
-
-### CI/CD Pipeline (Zukunft)
-- GitHub Actions für Automated Testing
-- Automated Build & Deployment
-- Code Quality Checks (Detekt, Ktlint)
-
-## 📈 Skalierbarkeit & Erweiterungen
-
-### Phase 1: Core Functionality
-- Basic Agent Creation & Chat
-- Gmail Integration & Background Sync
-- Gemini AI Processing
-
-### Phase 2: Advanced Features
-- Todo-System Integration
-- Kalender-Anbindung
-- Advanced Analytics Dashboard
-- Multi-Account Support
-
-### Phase 3: Enterprise Features
-- Team-Sharing von Agenten
-- Cloud-Backup & Sync
-- Advanced Security Features
-- API für Third-Party Integration
-
-## 🎯 Success Metrics
-
-### Technical KPIs
-- App Startup Time < 2s
-- Background Sync Reliability > 99%
-- Chat Response Time < 3s
-- Memory Usage < 100MB
-
-### User Experience
-- Agent Creation Flow < 5 Schritte
-- Intuitive Chat Interface
-- Offline Context Access
-- Battery-effiziente Background Tasks
-
-## 📊 Current Status
-
-### ✅ Phase 0: Project Foundation & Setup (COMPLETED)
-- Multi-module architecture setup
-- Gradle dependencies configured
-- Hilt dependency injection ready
-- Google APIs configured
-
-### ✅ Phase 1: Data Layer Implementation (COMPLETED)
-- Room database schema defined
-- Repository interfaces implemented
-- Gmail API client integration ready
-- Gemini API client integration ready
-
-### ✅ Phase 2: Domain Layer & Business Logic (COMPLETED)
-- Domain models with value objects and sealed classes
-- CreateAgentUseCase with validation
-- SyncEmailsUseCase with filtering
-- ProcessEmailUseCase with AI integration
-- ChatWithAgentUseCase with streaming support
-
-### ✅ Phase 3: Presentation Layer & UI Components (COMPLETED)
-- Material 3 Design System with dynamic color support
-- Reusable UI components (Atomic Design pattern)
-- Type-safe Navigation Compose setup
-- Dashboard Screen with MVVM and pull-to-refresh
-- Create Agent Screen with form validation
-- Chat Screen with messaging UI
-- Settings Screen with placeholders for Gmail auth
-- Loading/Error/Empty state handling
-
-### ✅ Phase 4: Background Processing & WorkManager (COMPLETED)
-- GmailSyncWorker with PeriodicWorkRequest for automatic sync every 30 minutes
-- EmailProcessingWorker with work chaining for batch email processing
-- WorkManagerHelper for centralized work scheduling
-- WorkManager Monitoring UI in Settings Screen
-- Notification System with three channels (New Mails, Processing, Sync)
-- Notification Manager with permission handling
-- Real-time work status tracking with Flow
-
-### ✅ API Integration & Authentication (COMPLETED - Additional Work)
-- Gmail API Client with full OAuth2 authentication
-- Google Sign-In integration for user authentication
-- GmailService and GeminiService implementations
-- Gemini API Key configuration via BuildConfig
-- Hilt dependency injection for all API services
-- Gmail Auth UI in Settings Screen with sign-in/sign-out
-- Real Gmail API message fetching with full email parsing
-- Automatic initialization after sign-in
-
-**Current Phase:** Phase 5 - Testing & Quality Assurance
-
-## 🎉 COMPLETE END-TO-END FLOW FUNKTIONIERT!
-
-### Full User Journey ✅
-1. **Gmail Sign-In** → Settings (OAuth2 Flow)
-2. **Create Agent** → Dashboard FAB (with YAML validation)
-3. **Manual Sync** → Settings "Sync Now" (fetches real Gmail)
-4. **Auto Processing** → Background Worker (Gemini AI extraction)
-5. **View Context** → Database (extracted data)
-6. **Chat with Agent** → Chat Screen (context-aware responses)
-7. **Periodic Sync** → Every 30 min (automatic background)
-
-## 🚀 Was funktioniert JETZT:
-
-### Gmail Authentication ✅
-- User kann sich in Settings mit Gmail anmelden
-- OAuth2 Flow mit Google Sign-In
-- Automatische Service-Initialisierung
-- Account-Status Anzeige
-
-### Gmail API ✅
-- Echte E-Mails fetchen von Gmail
-- Message parsing (Subject, Body, Sender, Attachments)
-- Mark as read functionality
-- Filter und Query Support
-
-### Gemini AI ✅
-- Email Analysis
-- Chat mit Context
-- Streaming Support
-- Prompt Engineering
-
-### Background Jobs ✅
-- WorkManager mit echten Services verbunden
-- Periodic Sync funktioniert mit echtem Gmail
-- Email Processing nutzt echten Gemini
-- Notifications bei Sync Success/Failure
-
-### Settings Screen ✅
-- Gmail Sign-In / Sign-Out
-- WorkManager Status Monitoring
-- Manual Sync Trigger
-- Job Management
-
-### Chat Screen ✅
-- Context-aware conversations with Gemini AI
-- Loads agent context from database automatically
-- Chat history support (last 10 messages)
-- Error handling with Snackbar
-- Real-time responses from processed email data
-
-### Agent Management ✅
-- Delete agents via dropdown menu
-- Activate/Deactivate toggle (affects sync behavior)
-- Edit option (UI ready)
-- Automatic dashboard refresh after actions
-
-## 📝 Nächste Schritte
-
-### Android Studio Setup
-1. Neues Android Studio Projekt erstellen
-2. Gradle Dependencies konfigurieren
-3. Multi-Module Struktur aufsetzen
-4. Google APIs Setup (Gmail, Gemini)
-5. Room Database Schema definieren
-6. Basis UI-Komponenten implementieren
-
-### Development Prioritäten
-1. **Foundation** - Projekt-Setup, Dependencies, Architektur
-2. **Data Layer** - Room Database, API Clients, Repositories
-3. **Domain Layer** - Use Cases, Business Logic
-4. **Presentation Layer** - Compose UI, ViewModels, Navigation
-5. **Integration** - Background Processing, Testing
-
-Dieses Projekt kombiniert moderne Android-Entwicklung mit AI-Integration für ein innovatives persönliches Produktivitäts-Tool.
+Dieses Projekt fokussiert sich nun darauf, eine klare, nützliche Automatisierungsaufgabe zu lösen, anstatt eine komplexe, konfigurierbare Plattform zu sein.

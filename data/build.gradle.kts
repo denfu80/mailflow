@@ -55,6 +55,11 @@ dependencies {
     implementation(libs.generativeai)
     implementation(libs.snakeyaml.engine)
 
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging.interceptor)
+
     implementation(libs.google.signin)
     implementation(libs.google.api.client.android)
     implementation(libs.google.api.services.gmail)

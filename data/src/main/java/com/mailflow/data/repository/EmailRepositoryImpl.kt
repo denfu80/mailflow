@@ -14,30 +14,17 @@ import javax.inject.Inject
 class EmailRepositoryImpl @Inject constructor(
     private val dao: EmailMessageDao,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    // private val gmailService: GmailService // Will be added later
 ) : EmailRepository {
 
-    override fun getMessagesByAgent(agentId: Long): Flow<List<EmailMessage>> {
-        return dao.getMessagesByAgent(agentId).map { entities ->
+    override suspend fun fetchNewMessages(): List<EmailMessage> {
+        // TODO: Implement with GmailService
+        return emptyList()
+    }
+
+    override fun getUnprocessedMessages(): Flow<List<EmailMessage>> {
+        return dao.getUnprocessedMessages().map { entities ->
             entities.map { it.toDomain() }
-        }
-    }
-
-    override fun getUnprocessedMessagesByAgent(agentId: Long): Flow<List<EmailMessage>> {
-        return dao.getUnprocessedMessagesByAgent(agentId).map { entities ->
-            entities.map { it.toDomain() }
-        }
-    }
-
-    override fun getUnprocessedCountByAgent(agentId: Long): Flow<Int> {
-        return dao.getUnprocessedCountByAgent(agentId)
-    }
-
-    override suspend fun saveMessage(message: EmailMessage): Result<Long> = withContext(ioDispatcher) {
-        try {
-            val id = dao.insertMessage(message.toEntity())
-            Result.success(id)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
@@ -61,7 +48,6 @@ class EmailRepositoryImpl @Inject constructor(
 
     private fun EmailMessageEntity.toDomain() = EmailMessage(
         id = id,
-        agentId = agentId,
         messageId = messageId,
         subject = subject,
         sender = sender,
@@ -73,7 +59,6 @@ class EmailRepositoryImpl @Inject constructor(
 
     private fun EmailMessage.toEntity() = EmailMessageEntity(
         id = id,
-        agentId = agentId,
         messageId = messageId,
         subject = subject,
         sender = sender,
@@ -83,3 +68,4 @@ class EmailRepositoryImpl @Inject constructor(
         processedAt = processedAt
     )
 }
+

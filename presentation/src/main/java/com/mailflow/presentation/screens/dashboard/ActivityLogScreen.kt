@@ -8,10 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -26,25 +24,21 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mailflow.presentation.components.atoms.EmptyState
 import com.mailflow.presentation.components.atoms.ErrorState
-import com.mailflow.presentation.components.atoms.LoadingIndicator
-import com.mailflow.presentation.components.molecules.AgentCard
 import com.mailflow.presentation.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(
-    onAgentClick: (String) -> Unit,
-    onCreateAgentClick: () -> Unit,
+fun ActivityLogScreen(
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: DashboardViewModel = hiltViewModel()
+    viewModel: ActivityLogViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("MailFlow Agents") },
+                title = { Text("Activity Log") },
                 actions = {
                     IconButton(onClick = onSettingsClick) {
                         Icon(
@@ -54,14 +48,6 @@ fun DashboardScreen(
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = onCreateAgentClick) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Create Agent"
-                )
-            }
         },
         modifier = modifier
     ) { paddingValues ->
@@ -82,10 +68,10 @@ fun DashboardScreen(
                         )
                     }
 
-                    uiState.agents.isEmpty() && !uiState.isLoading -> {
+                    uiState.logs.isEmpty() && !uiState.isLoading -> {
                         EmptyState(
-                            message = "No agents yet",
-                            subtitle = "Create your first agent to get started",
+                            message = "No activities yet",
+                            subtitle = "Sync your emails to see the logs",
                             modifier = Modifier.align(Alignment.Center)
                         )
                     }
@@ -95,21 +81,8 @@ fun DashboardScreen(
                             contentPadding = PaddingValues(Spacing.medium),
                             verticalArrangement = Arrangement.spacedBy(Spacing.medium)
                         ) {
-                            items(
-                                items = uiState.agents,
-                                key = { it.id }
-                            ) { agent ->
-                                AgentCard(
-                                    name = agent.name,
-                                    description = agent.description,
-                                    isActive = agent.isActive,
-                                    onClick = { onAgentClick(agent.id) },
-                                    onEdit = { /* TODO: Navigate to edit */ },
-                                    onDelete = { viewModel.deleteAgent(agent.id) },
-                                    onToggleActive = { isActive ->
-                                        viewModel.toggleAgentActive(agent.id, isActive)
-                                    }
-                                )
+                            items(uiState.logs) { log ->
+                                Text(text = log, modifier = Modifier.padding(Spacing.small))
                             }
                         }
                     }
@@ -118,3 +91,4 @@ fun DashboardScreen(
         }
     }
 }
+

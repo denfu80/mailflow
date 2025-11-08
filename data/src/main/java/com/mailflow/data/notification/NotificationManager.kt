@@ -16,6 +16,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
+import android.annotation.SuppressLint
+
 @Singleton
 class NotificationManager @Inject constructor(
     @ApplicationContext private val context: Context
@@ -28,141 +30,75 @@ class NotificationManager @Inject constructor(
 
     private fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val newMailsChannel = NotificationChannel(
-                CHANNEL_NEW_MAILS,
-                "New Emails",
-                AndroidNotificationManager.IMPORTANCE_DEFAULT
-            ).apply {
-                description = "Notifications for new emails"
-                enableVibration(true)
-            }
-
-            val processingChannel = NotificationChannel(
-                CHANNEL_PROCESSING,
-                "Email Processing",
-                AndroidNotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Background email processing status"
-                enableVibration(false)
-            }
-
-            val syncChannel = NotificationChannel(
-                CHANNEL_SYNC,
-                "Email Sync",
-                AndroidNotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Email synchronization status"
-                enableVibration(false)
-            }
-
+            val channels = listOf(
+                NotificationChannel(
+                    CHANNEL_SYNC,
+                    "Email Sync",
+                    AndroidNotificationManager.IMPORTANCE_LOW
+                ).apply {
+                    description = "Email synchronization status"
+                },
+                NotificationChannel(
+                    CHANNEL_TODOS,
+                    "New Todos",
+                    AndroidNotificationManager.IMPORTANCE_DEFAULT
+                ).apply {
+                    description = "Notifications for newly created todos"
+                    enableVibration(true)
+                }
+            )
             val systemNotificationManager =
                 context.getSystemService(Context.NOTIFICATION_SERVICE) as AndroidNotificationManager
-
-            systemNotificationManager.createNotificationChannel(newMailsChannel)
-            systemNotificationManager.createNotificationChannel(processingChannel)
-            systemNotificationManager.createNotificationChannel(syncChannel)
+            systemNotificationManager.createNotificationChannels(channels)
         }
     }
 
-    fun showNewMailsNotification(
-        agentName: String,
-        messageCount: Int,
-        deepLinkIntent: Intent? = null
-    ) {
-        if (!hasNotificationPermission()) return
+    @SuppressLint("MissingPermission")
+    fun showTodoCreatedNotification(todoTitle: String, listName: String) {
+        if (hasNotificationPermission()) {
+            val notification = NotificationCompat.Builder(context, CHANNEL_TODOS)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle("New Todo Created")
+                .setContentText("'$todoTitle' added to list '$listName'")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true)
+                .build()
 
-        val pendingIntent = deepLinkIntent?.let {
-            PendingIntent.getActivity(
-                context,
-                0,
-                it,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
+            notificationManager.notify(System.currentTimeMillis().toInt(), notification)
         }
-
-        val notification = NotificationCompat.Builder(context, CHANNEL_NEW_MAILS)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("New emails for $agentName")
-            .setContentText("$messageCount new email${if (messageCount > 1) "s" else ""} received")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setAutoCancel(true)
-            .apply {
-                pendingIntent?.let { setContentIntent(it) }
-            }
-            .build()
-
-        notificationManager.notify(NOTIFICATION_ID_NEW_MAILS, notification)
     }
 
-    fun showProcessingNotification(
-        agentName: String,
-        progress: Int,
-        total: Int
-    ) {
-        if (!hasNotificationPermission()) return
-
-        val notification = NotificationCompat.Builder(context, CHANNEL_PROCESSING)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Processing emails")
-            .setContentText("$agentName: $progress/$total")
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setProgress(total, progress, false)
-            .setOngoing(true)
-            .build()
-
-        notificationManager.notify(NOTIFICATION_ID_PROCESSING, notification)
-    }
-
-    fun showProcessingCompleteNotification(
-        agentName: String,
-        processedCount: Int
-    ) {
-        if (!hasNotificationPermission()) return
-
-        val notification = NotificationCompat.Builder(context, CHANNEL_PROCESSING)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Processing complete")
-            .setContentText("$agentName: $processedCount emails processed")
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setAutoCancel(true)
-            .build()
-
-        notificationManager.notify(NOTIFICATION_ID_PROCESSING, notification)
-    }
-
+    @SuppressLint("MissingPermission")
     fun showSyncNotification(
         messagesFetched: Int,
         messagesProcessed: Int
     ) {
-        if (!hasNotificationPermission()) return
+        if (hasNotificationPermission()) {
+            val notification = NotificationCompat.Builder(context, CHANNEL_SYNC)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle("Email sync complete")
+                .setContentText("$messagesFetched fetched, $messagesProcessed processed")
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setAutoCancel(true)
+                .build()
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_SYNC)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Email sync complete")
-            .setContentText("$messagesFetched fetched, $messagesProcessed processed")
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setAutoCancel(true)
-            .build()
-
-        notificationManager.notify(NOTIFICATION_ID_SYNC, notification)
+            notificationManager.notify(NOTIFICATION_ID_SYNC, notification)
+        }
     }
 
+    @SuppressLint("MissingPermission")
     fun showSyncFailedNotification(error: String) {
-        if (!hasNotificationPermission()) return
+        if (hasNotificationPermission()) {
+            val notification = NotificationCompat.Builder(context, CHANNEL_SYNC)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle("Email sync failed")
+                .setContentText(error)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true)
+                .build()
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_SYNC)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Email sync failed")
-            .setContentText(error)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setAutoCancel(true)
-            .build()
-
-        notificationManager.notify(NOTIFICATION_ID_SYNC, notification)
-    }
-
-    fun cancelProcessingNotification() {
-        notificationManager.cancel(NOTIFICATION_ID_PROCESSING)
+            notificationManager.notify(NOTIFICATION_ID_SYNC, notification)
+        }
     }
 
     fun cancelAllNotifications() {
@@ -181,12 +117,9 @@ class NotificationManager @Inject constructor(
     }
 
     companion object {
-        private const val CHANNEL_NEW_MAILS = "channel_new_mails"
-        private const val CHANNEL_PROCESSING = "channel_processing"
+        private const val CHANNEL_TODOS = "channel_todos"
         private const val CHANNEL_SYNC = "channel_sync"
-
-        private const val NOTIFICATION_ID_NEW_MAILS = 1001
-        private const val NOTIFICATION_ID_PROCESSING = 1002
         private const val NOTIFICATION_ID_SYNC = 1003
     }
 }
+

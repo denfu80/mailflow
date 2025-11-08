@@ -7,11 +7,8 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ProcessingJobDao {
 
-    @Query("SELECT * FROM processing_jobs WHERE agentId = :agentId ORDER BY startTime DESC LIMIT :limit")
-    fun getJobsByAgent(agentId: Long, limit: Int = 10): Flow<List<ProcessingJobEntity>>
-
-    @Query("SELECT * FROM processing_jobs WHERE status = 'RUNNING' ORDER BY startTime ASC")
-    suspend fun getRunningJobs(): List<ProcessingJobEntity>
+    @Query("SELECT * FROM processing_jobs ORDER BY startTime DESC LIMIT 20")
+    fun getRecentJobs(): Flow<List<ProcessingJobEntity>>
 
     @Insert
     suspend fun insertJob(job: ProcessingJobEntity): Long
@@ -24,7 +21,4 @@ interface ProcessingJobDao {
 
     @Query("UPDATE processing_jobs SET status = :status, endTime = :endTime, error = :error WHERE id = :jobId")
     suspend fun updateJobWithError(jobId: Long, status: String, error: String, endTime: Long = System.currentTimeMillis())
-
-    @Query("DELETE FROM processing_jobs WHERE agentId = :agentId")
-    suspend fun deleteJobsByAgent(agentId: Long)
 }

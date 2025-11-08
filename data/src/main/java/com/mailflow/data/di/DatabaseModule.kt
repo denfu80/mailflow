@@ -30,18 +30,8 @@ object DatabaseModule {
     }
 
     @Provides
-    fun provideMailAgentDao(database: MailFlowDatabase): MailAgentDao {
-        return database.mailAgentDao()
-    }
-
-    @Provides
     fun provideEmailMessageDao(database: MailFlowDatabase): EmailMessageDao {
         return database.emailMessageDao()
-    }
-
-    @Provides
-    fun provideAgentContextDao(database: MailFlowDatabase): AgentContextDao {
-        return database.agentContextDao()
     }
 
     @Provides

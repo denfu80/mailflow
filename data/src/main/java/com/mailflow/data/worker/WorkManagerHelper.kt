@@ -49,18 +49,13 @@ class WorkManagerHelper @Inject constructor(
         )
     }
 
-    fun scheduleOneTimeSync(agentId: Long? = null) {
+    fun scheduleOneTimeSync() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        val inputData = agentId?.let {
-            workDataOf(GmailSyncWorker.KEY_AGENT_ID to it)
-        } ?: workDataOf()
-
         val syncWorkRequest = OneTimeWorkRequestBuilder<GmailSyncWorker>()
             .setConstraints(constraints)
-            .setInputData(inputData)
             .addTag(TAG_SYNC_WORK)
             .build()
 
@@ -71,47 +66,40 @@ class WorkManagerHelper @Inject constructor(
         )
     }
 
-    fun scheduleEmailProcessing(agentId: Long) {
+    fun scheduleEmailProcessing() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        val inputData = workDataOf(EmailProcessingWorker.KEY_AGENT_ID to agentId)
-
         val processingWorkRequest = OneTimeWorkRequestBuilder<EmailProcessingWorker>()
             .setConstraints(constraints)
-            .setInputData(inputData)
             .addTag(TAG_PROCESSING_WORK)
             .build()
 
         workManager.enqueueUniqueWork(
-            "${EmailProcessingWorker.WORK_NAME}_$agentId",
+            EmailProcessingWorker.WORK_NAME,
             ExistingWorkPolicy.REPLACE,
             processingWorkRequest
         )
     }
 
-    fun scheduleSyncWithProcessing(agentId: Long) {
+    fun scheduleSyncWithProcessing() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        val inputData = workDataOf(GmailSyncWorker.KEY_AGENT_ID to agentId)
-
         val syncWorkRequest = OneTimeWorkRequestBuilder<GmailSyncWorker>()
             .setConstraints(constraints)
-            .setInputData(inputData)
             .addTag(TAG_SYNC_WORK)
             .build()
 
         val processingWorkRequest = OneTimeWorkRequestBuilder<EmailProcessingWorker>()
             .setConstraints(constraints)
-            .setInputData(inputData)
             .addTag(TAG_PROCESSING_WORK)
             .build()
 
         workManager.beginUniqueWork(
-            "${CHAIN_WORK_NAME}_$agentId",
+            CHAIN_WORK_NAME,
             ExistingWorkPolicy.REPLACE,
             syncWorkRequest
         )
@@ -130,11 +118,6 @@ class WorkManagerHelper @Inject constructor(
 
     fun observeSyncWorkInfo(): Flow<WorkInfo?> {
         return workManager.getWorkInfosForUniqueWorkFlow(GmailSyncWorker.WORK_NAME)
-            .map { workInfos -> workInfos.firstOrNull() }
-    }
-
-    fun observeProcessingWorkInfo(agentId: Long): Flow<WorkInfo?> {
-        return workManager.getWorkInfosForUniqueWorkFlow("${EmailProcessingWorker.WORK_NAME}_$agentId")
             .map { workInfos -> workInfos.firstOrNull() }
     }
 

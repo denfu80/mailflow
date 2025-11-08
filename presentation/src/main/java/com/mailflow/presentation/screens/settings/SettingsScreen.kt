@@ -18,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -40,9 +41,9 @@ fun SettingsScreen(
     val syncWorkStatus by viewModel.syncWorkStatus.collectAsStateWithLifecycle()
     val allSyncWork by viewModel.allSyncWork.collectAsStateWithLifecycle()
     val allProcessingWork by viewModel.allProcessingWork.collectAsStateWithLifecycle()
+    val todoListName by viewModel.todoListName.collectAsStateWithLifecycle()
 
     val authHelper = viewModel.gmailAuthHelper
-    val gmailClient = viewModel.gmailClient
     Scaffold(
         topBar = {
             TopAppBar(
@@ -65,6 +66,38 @@ fun SettingsScreen(
                 .padding(paddingValues)
         ) {
             Text(
+                text = "Account",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(Spacing.medium)
+            )
+
+            GmailAuthCard(
+                authHelper = authHelper,
+                modifier = Modifier.padding(horizontal = Spacing.medium)
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.medium))
+
+            Text(
+                text = "Todo App Settings",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(Spacing.medium)
+            )
+
+            OutlinedTextField(
+                value = todoListName,
+                onValueChange = viewModel::onTodoListNameChange,
+                label = { Text("Todo List Name/ID") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Spacing.medium)
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.medium))
+
+            Text(
                 text = "Background Sync",
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary,
@@ -76,74 +109,6 @@ fun SettingsScreen(
                 onManualSync = { viewModel.triggerManualSync() },
                 onCancelAll = { viewModel.cancelAllWork() },
                 modifier = Modifier.padding(horizontal = Spacing.medium)
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.medium))
-
-            Text(
-                text = "Active Jobs",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(Spacing.medium)
-            )
-
-            Text(
-                text = "Sync Jobs: ${allSyncWork.size} | Processing Jobs: ${allProcessingWork.size}",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(horizontal = Spacing.medium)
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.medium))
-
-            Text(
-                text = "Account",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(Spacing.medium)
-            )
-
-            GmailAuthCard(
-                authHelper = authHelper,
-                gmailClient = gmailClient,
-                modifier = Modifier.padding(horizontal = Spacing.medium)
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.medium))
-
-            Text(
-                text = "App Settings",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(Spacing.medium)
-            )
-
-            SettingsItem(
-                title = "Sync Frequency",
-                subtitle = "Every 30 minutes",
-                onClick = { }
-            )
-
-            HorizontalDivider()
-
-            SettingsItem(
-                title = "Notifications",
-                subtitle = "Enable push notifications",
-                onClick = { }
-            )
-
-            HorizontalDivider()
-
-            Text(
-                text = "About",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(Spacing.medium)
-            )
-
-            SettingsItem(
-                title = "Version",
-                subtitle = "1.0.0",
-                onClick = { }
             )
         }
     }
@@ -172,9 +137,8 @@ private fun WorkStatusCard(
                     style = MaterialTheme.typography.titleMedium
                 )
 
-                when (status) {
-                    is WorkStatus.Running -> CircularProgressIndicator()
-                    else -> {}
+                if (status is WorkStatus.Running) {
+                    CircularProgressIndicator()
                 }
             }
 
@@ -185,7 +149,7 @@ private fun WorkStatusCard(
                     is WorkStatus.Running -> "Syncing emails..."
                     is WorkStatus.Blocked -> "Sync blocked (waiting for constraints)"
                     is WorkStatus.Cancelled -> "Sync cancelled"
-                    is WorkStatus.Succeeded -> "Last sync: ${status.messagesFetched} fetched, ${status.messagesProcessed} processed"
+                    is WorkStatus.Succeeded -> "Last sync succeeded"
                     is WorkStatus.Failed -> "Sync failed: ${status.error}"
                 },
                 style = MaterialTheme.typography.bodyMedium,
@@ -222,3 +186,4 @@ private fun WorkStatusCard(
         }
     }
 }
+
