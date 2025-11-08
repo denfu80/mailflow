@@ -17,7 +17,7 @@ object GeminiModule {
     @Singleton
     @GeminiApiKey
     fun provideGeminiApiKey(): String {
-        return com.mailflow.app.BuildConfig.GEMINI_API_KEY
+        return com.mailflow.data.BuildConfig.GEMINI_API_KEY
     }
 
     @Provides
