@@ -1,5 +1,6 @@
 package com.mailflow.domain.usecase
 
+import com.mailflow.data.remote.gemini.GeminiClient
 import com.mailflow.domain.model.EmailMessage
 import com.mailflow.domain.model.ErrorType
 import com.mailflow.domain.model.ProcessingError
@@ -11,7 +12,7 @@ import javax.inject.Inject
 class ProcessEmailUseCase @Inject constructor(
     private val emailRepository: EmailRepository,
     private val todoRepository: TodoRepository,
-    // private val geminiService: GeminiService // Will be added later
+    private val geminiClient: GeminiClient
 ) {
     suspend operator fun invoke(
         message: EmailMessage,
@@ -29,14 +30,26 @@ class ProcessEmailUseCase @Inject constructor(
 
             val prompt = buildTodoExtractionPrompt(message)
 
-            // val aiResponse = geminiService.analyzeEmail(prompt)
-            // Placeholder for AI response
-            val aiResponse = "Extracted Todo: Pay the electricity bill by Friday."
+            // Use Gemini to extract todo from email
+            val aiResult = geminiClient.generateContent(prompt)
 
+            if (aiResult.isFailure) {
+                return ProcessingResult.Error(
+                    ProcessingError(
+                        type = ErrorType.API_ERROR,
+                        message = "AI analysis failed: ${aiResult.exceptionOrNull()?.message}",
+                        cause = aiResult.exceptionOrNull()
+                    )
+                )
+            }
+
+            val aiResponse = aiResult.getOrNull() ?: ""
             val extractedTodo = parseAiResponse(aiResponse)
 
             if (extractedTodo.isBlank()) {
-                return ProcessingResult.Success("No todo found.")
+                // Mark as processed even if no todo found
+                emailRepository.markMessageAsProcessed(message.id)
+                return ProcessingResult.Success("No todo found in email.")
             }
 
             val result = todoRepository.addTodo(
@@ -69,21 +82,55 @@ class ProcessEmailUseCase @Inject constructor(
 
     private fun buildTodoExtractionPrompt(email: EmailMessage): String {
         return """
-            From the following email content, extract a single, concise to-do item.
-            The to-do item should be a clear action.
-            If no specific task is found, return an empty string.
+            You are a helpful assistant that extracts actionable tasks from emails.
+
+            Analyze the following email and extract ONE clear, concise to-do item.
+
+            Rules:
+            - Extract only ONE actionable task (the most important one)
+            - The task should be written as a clear action item
+            - Keep it concise (max 100 characters)
+            - If there is no actionable task in the email, respond with: "NONE"
+            - Do not include explanations, only output the task text or "NONE"
 
             Email Subject: ${email.subject}
+
             Email Body:
             ${email.body}
 
-            Extracted Todo:
+            Extracted Task:
         """.trimIndent()
     }
 
     private fun parseAiResponse(response: String): String {
-        // Simple parsing for now, assuming the AI returns the todo directly.
-        return response.removePrefix("Extracted Todo:").trim()
+        val cleaned = response.trim()
+
+        // Check if AI explicitly said there's no task
+        if (cleaned.equals("NONE", ignoreCase = true)) {
+            return ""
+        }
+
+        // Remove common prefixes that AI might add
+        val prefixes = listOf(
+            "Extracted Task:",
+            "Task:",
+            "To-do:",
+            "Action:"
+        )
+
+        var result = cleaned
+        for (prefix in prefixes) {
+            if (result.startsWith(prefix, ignoreCase = true)) {
+                result = result.substring(prefix.length).trim()
+            }
+        }
+
+        // Limit length to 200 characters
+        return if (result.length > 200) {
+            result.substring(0, 197) + "..."
+        } else {
+            result
+        }
     }
 }
 

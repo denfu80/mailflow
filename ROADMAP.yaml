@@ -51,7 +51,8 @@ phases:
     name: "Core Logic for Todo Extraction"
     duration: "1-2 Wochen"
     priority: high
-    status: pending
+    status: completed
+    completed_date: 2025-11-08
     description: "Implement the new core functionality: extracting todos from emails and posting them to an external API."
 
     tasks:
@@ -86,7 +87,8 @@ phases:
     name: "UI and User Configuration"
     duration: "1 Woche"
     priority: high
-    status: pending
+    status: completed
+    completed_date: 2025-11-08
     description: "Build the new, simplified user interface."
 
     tasks:
@@ -120,12 +122,13 @@ phases:
     name: "Final Integration & Testing"
     duration: "1 Woche"
     priority: medium
-    status: pending
+    status: in_progress
     description: "Replace dummy implementations and conduct end-to-end testing."
 
     tasks:
       - id: P4-T1
         name: "Implement Real Todo API Client"
+        status: completed
         description: "Replace the dummy TodoApiClient with a real Retrofit implementation based on the provided API specs."
         outcome: "The app communicates with the real web service."
         acceptance_criteria:

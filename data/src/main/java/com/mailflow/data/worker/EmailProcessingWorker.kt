@@ -5,6 +5,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.mailflow.data.notification.NotificationManager
+import com.mailflow.data.preferences.SettingsDataStore
 import com.mailflow.domain.model.ProcessingResult
 import com.mailflow.domain.repository.EmailRepository
 import com.mailflow.domain.usecase.ProcessEmailUseCase
@@ -18,23 +19,24 @@ class EmailProcessingWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val processEmailUseCase: ProcessEmailUseCase,
     private val emailRepository: EmailRepository,
-    private val notificationManager: NotificationManager
+    private val notificationManager: NotificationManager,
+    private val settingsDataStore: SettingsDataStore
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         return try {
+            val todoListName = settingsDataStore.todoListName.first()
             val unprocessedMessages = emailRepository.getUnprocessedMessages().first()
             var successCount = 0
 
             for (message in unprocessedMessages) {
-                // TODO: Get list name from settings
-                val result = processEmailUseCase(message, "inbox-test")
+                val result = processEmailUseCase(message, todoListName)
 
                 if (result is ProcessingResult.Success) {
                     successCount++
                     notificationManager.showTodoCreatedNotification(
                         todoTitle = result.data,
-                        listName = "inbox-test"
+                        listName = todoListName
                     )
                 }
             }

@@ -2,10 +2,15 @@ package com.mailflow.presentation.screens.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mailflow.domain.repository.ProcessingLogRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,29 +22,40 @@ data class ActivityLogUiState(
 
 @HiltViewModel
 class ActivityLogViewModel @Inject constructor(
-    // TODO: Inject repository for logs
+    private val processingLogRepository: ProcessingLogRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ActivityLogUiState())
-    val uiState: StateFlow<ActivityLogUiState> = _uiState.asStateFlow()
+    private val _isRefreshing = MutableStateFlow(false)
 
-    init {
-        loadLogs()
-    }
-
-    fun loadLogs() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            // TODO: Load logs from repository
-            _uiState.value = _uiState.value.copy(
-                logs = listOf("Log entry 1", "Log entry 2"),
-                isLoading = false
+    val uiState: StateFlow<ActivityLogUiState> = processingLogRepository.getRecentLogs()
+        .map { logs ->
+            ActivityLogUiState(
+                logs = logs.map { it.toDisplayString() },
+                isLoading = _isRefreshing.value,
+                error = null
             )
         }
-    }
+        .catch { e ->
+            emit(ActivityLogUiState(
+                logs = emptyList(),
+                isLoading = false,
+                error = e.message ?: "Unknown error"
+            ))
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = ActivityLogUiState(isLoading = true)
+        )
 
     fun onRefresh() {
-        loadLogs()
+        // The Flow automatically updates, so we just need to mark as refreshing
+        _isRefreshing.value = true
+        // Reset after a short delay (the Flow will update automatically)
+        viewModelScope.launch {
+            delay(500)
+            _isRefreshing.value = false
+        }
     }
 }
 
