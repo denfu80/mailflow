@@ -3,9 +3,11 @@ package com.mailflow.data.di
 import com.mailflow.data.repository.EmailRepositoryImpl
 import com.mailflow.data.repository.ProcessingLogRepositoryImpl
 import com.mailflow.data.repository.TodoRepositoryImpl
+import com.mailflow.data.service.GeminiAIService
 import com.mailflow.domain.repository.EmailRepository
 import com.mailflow.domain.repository.ProcessingLogRepository
 import com.mailflow.domain.repository.TodoRepository
+import com.mailflow.domain.service.AIService
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -32,4 +34,10 @@ abstract class RepositoryModule {
     abstract fun bindProcessingLogRepository(
         impl: ProcessingLogRepositoryImpl
     ): ProcessingLogRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAIService(
+        impl: GeminiAIService
+    ): AIService
 }

@@ -1,18 +1,18 @@
 package com.mailflow.domain.usecase
 
-import com.mailflow.data.remote.gemini.GeminiClient
 import com.mailflow.domain.model.EmailMessage
 import com.mailflow.domain.model.ErrorType
 import com.mailflow.domain.model.ProcessingError
 import com.mailflow.domain.model.ProcessingResult
 import com.mailflow.domain.repository.EmailRepository
 import com.mailflow.domain.repository.TodoRepository
+import com.mailflow.domain.service.AIService
 import javax.inject.Inject
 
 class ProcessEmailUseCase @Inject constructor(
     private val emailRepository: EmailRepository,
     private val todoRepository: TodoRepository,
-    private val geminiClient: GeminiClient
+    private val aiService: AIService
 ) {
     suspend operator fun invoke(
         message: EmailMessage,
@@ -30,8 +30,8 @@ class ProcessEmailUseCase @Inject constructor(
 
             val prompt = buildTodoExtractionPrompt(message)
 
-            // Use Gemini to extract todo from email
-            val aiResult = geminiClient.generateContent(prompt)
+            // Use AI to extract todo from email
+            val aiResult = aiService.generateContent(prompt)
 
             if (aiResult.isFailure) {
                 return ProcessingResult.Error(
