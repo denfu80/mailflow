@@ -13,12 +13,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object GeminiModule {
 
-    @Provides
-    @Singleton
-    @GeminiApiKey
-    fun provideGeminiApiKey(): String {
-        return com.mailflow.data.BuildConfig.GEMINI_API_KEY
-    }
+    // API Key is provided by AppModule in the app layer
 
     @Provides
     @Singleton
