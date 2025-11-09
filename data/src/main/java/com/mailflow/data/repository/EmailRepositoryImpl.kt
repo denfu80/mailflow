@@ -51,7 +51,7 @@ class EmailRepositoryImpl @Inject constructor(
                 gmailSyncStateDao.updateSyncState(
                     GmailSyncStateEntity(
                         id = 1,
-                        historyId = historyId,
+                        historyId = historyId.toLong(),
                         lastSyncTimestamp = System.currentTimeMillis()
                     )
                 )

@@ -69,7 +69,7 @@ class GmailApiClient @Inject constructor(
 
     data class FetchMessagesResult(
         val messages: List<GmailClient.GmailMessage>,
-        val historyId: Long?
+        val historyId: java.math.BigInteger?
     )
 
     suspend fun fetchMessages(
