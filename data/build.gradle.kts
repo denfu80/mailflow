@@ -73,6 +73,8 @@ dependencies {
     implementation(libs.hilt.work)
     ksp(libs.androidx.hilt.compiler)
 
+    implementation(libs.datastore.preferences)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)

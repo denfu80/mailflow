@@ -10,7 +10,7 @@ import com.mailflow.data.model.*
         EmailMessageEntity::class,
         ProcessingJobEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class MailFlowDatabase : RoomDatabase() {

@@ -15,20 +15,18 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-
 class SettingsViewModel @Inject constructor(
-
     private val workManagerHelper: WorkManagerHelper,
-
     val gmailAuthHelper: com.mailflow.data.remote.gmail.GmailAuthHelper,
-
+    private val settingsDataStore: com.mailflow.data.preferences.SettingsDataStore
 ) : ViewModel() {
 
-
-
-    private val _todoListName = MutableStateFlow("inbox-test")
-
-    val todoListName: StateFlow<String> = _todoListName.asStateFlow()
+    val todoListName: StateFlow<String> = settingsDataStore.todoListName
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = "inbox-test"
+        )
 
 
 
@@ -105,9 +103,9 @@ class SettingsViewModel @Inject constructor(
 
 
     fun onTodoListNameChange(newName: String) {
-
-        _todoListName.value = newName
-
+        viewModelScope.launch {
+            settingsDataStore.setTodoListName(newName)
+        }
     }
 
 
