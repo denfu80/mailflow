@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.mailflow.presentation.screens.dashboard.ActivityLogScreen
+import com.mailflow.presentation.screens.emailmanagement.EmailManagementScreen
 import com.mailflow.presentation.screens.settings.SettingsScreen
 
 @Composable
@@ -15,9 +16,17 @@ fun NavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.ActivityLog.route,
+        startDestination = Screen.EmailManagement.route,
         modifier = modifier
     ) {
+        composable(Screen.EmailManagement.route) {
+            EmailManagementScreen(
+                onNavigateToSettings = {
+                    navController.navigate(Screen.Settings.route)
+                }
+            )
+        }
+
         composable(Screen.ActivityLog.route) {
             ActivityLogScreen(
                 onSettingsClick = {

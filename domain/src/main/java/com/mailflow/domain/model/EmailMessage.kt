@@ -8,5 +8,8 @@ data class EmailMessage(
     val receivedAt: Long,
     val body: String,
     val processed: Boolean = false,
-    val processedAt: Long? = null
+    val processedAt: Long? = null,
+    val selected: Boolean = false,
+    val extractedTodos: String? = null,
+    val todosSynced: Boolean = false
 )
