@@ -21,15 +21,22 @@ class GmailClient @Inject constructor(
         gmailApiClient.initializeService(account)
     }
 
+    data class FetchMessagesResult(
+        val messages: List<GmailMessage>,
+        val historyId: Long?
+    )
+
     suspend fun fetchMessages(
         query: String? = null,
         maxResults: Int = 100
-    ): Result<List<GmailMessage>> {
+    ): Result<FetchMessagesResult> {
         if (!isAuthenticated()) {
             return Result.failure(IllegalStateException("Not authenticated. Please sign in first."))
         }
 
-        return gmailApiClient.fetchMessages(query, maxResults.toLong())
+        return gmailApiClient.fetchMessages(query, maxResults.toLong()).map { result ->
+            FetchMessagesResult(result.messages, result.historyId)
+        }
     }
 
     suspend fun getMessage(messageId: String): Result<GmailMessage> {
@@ -37,8 +44,8 @@ class GmailClient @Inject constructor(
             return Result.failure(IllegalStateException("Not authenticated"))
         }
 
-        val messages = fetchMessages(query = "rfc822msgid:$messageId", maxResults = 1)
-        return messages.mapCatching { it.firstOrNull() ?: throw NoSuchElementException("Message not found") }
+        val result = fetchMessages(query = "rfc822msgid:$messageId", maxResults = 1)
+        return result.mapCatching { it.messages.firstOrNull() ?: throw NoSuchElementException("Message not found") }
     }
 
     suspend fun markAsRead(messageId: String): Result<Unit> {

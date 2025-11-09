@@ -67,10 +67,15 @@ class GmailApiClient @Inject constructor(
             .build()
     }
 
+    data class FetchMessagesResult(
+        val messages: List<GmailClient.GmailMessage>,
+        val historyId: Long?
+    )
+
     suspend fun fetchMessages(
         query: String? = null,
         maxResults: Long = 100
-    ): Result<List<GmailClient.GmailMessage>> = withContext(Dispatchers.IO) {
+    ): Result<FetchMessagesResult> = withContext(Dispatchers.IO) {
         try {
             var service = gmailService
 
@@ -102,10 +107,19 @@ class GmailApiClient @Inject constructor(
                 .execute()
 
             val messages = messagesResponse.messages
-            Log.d(TAG, "Fetched ${messages?.size ?: 0} message IDs from Gmail API")
+            val historyId = messagesResponse.resultSizeEstimate?.let {
+                // Get the latest history ID from the profile
+                try {
+                    service.users().getProfile("me").execute().historyId
+                } catch (e: Exception) {
+                    Log.w(TAG, "Could not fetch history ID: ${e.message}")
+                    null
+                }
+            }
+            Log.d(TAG, "Fetched ${messages?.size ?: 0} message IDs from Gmail API, historyId: $historyId")
 
             if (messages == null) {
-                return@withContext Result.success(emptyList())
+                return@withContext Result.success(FetchMessagesResult(emptyList(), historyId))
             }
 
             val detailedMessages = messages.mapNotNull { message ->
@@ -148,7 +162,7 @@ class GmailApiClient @Inject constructor(
             }
 
             Log.d(TAG, "Successfully fetched ${detailedMessages.size} detailed messages")
-            Result.success(detailedMessages)
+            Result.success(FetchMessagesResult(detailedMessages, historyId))
         } catch (e: Exception) {
             Log.e(TAG, "Error in fetchMessages: ${e.message}", e)
             Result.failure(e)
