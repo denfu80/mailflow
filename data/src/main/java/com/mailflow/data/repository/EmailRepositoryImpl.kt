@@ -1,8 +1,12 @@
 package com.mailflow.data.repository
 
+import android.util.Log
 import com.mailflow.core.di.IoDispatcher
 import com.mailflow.data.database.dao.EmailMessageDao
+import com.mailflow.data.database.dao.GmailSyncStateDao
 import com.mailflow.data.model.EmailMessageEntity
+import com.mailflow.data.model.GmailSyncStateEntity
+import com.mailflow.data.remote.gmail.GmailClient
 import com.mailflow.domain.model.EmailMessage
 import com.mailflow.domain.repository.EmailRepository
 import kotlinx.coroutines.CoroutineDispatcher
@@ -13,13 +17,64 @@ import javax.inject.Inject
 
 class EmailRepositoryImpl @Inject constructor(
     private val dao: EmailMessageDao,
+    private val gmailSyncStateDao: GmailSyncStateDao,
+    private val gmailClient: GmailClient,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
-    // private val gmailService: GmailService // Will be added later
 ) : EmailRepository {
 
-    override suspend fun fetchNewMessages(): List<EmailMessage> {
-        // TODO: Implement with GmailService
-        return emptyList()
+    companion object {
+        private const val TAG = "EmailRepositoryImpl"
+        private const val ONE_DAY_QUERY = "newer_than:1d"
+    }
+
+    override suspend fun fetchNewMessages(): List<EmailMessage> = withContext(ioDispatcher) {
+        try {
+            // Check if authenticated
+            if (!gmailClient.isAuthenticated()) {
+                Log.w(TAG, "Not authenticated with Gmail")
+                return@withContext emptyList()
+            }
+
+            // Fetch messages from the last 24 hours
+            val result = gmailClient.fetchMessages(
+                query = ONE_DAY_QUERY,
+                maxResults = 100
+            ).getOrElse { exception ->
+                Log.e(TAG, "Failed to fetch messages from Gmail: ${exception.message}", exception)
+                return@withContext emptyList()
+            }
+
+            Log.d(TAG, "Fetched ${result.messages.size} messages from Gmail")
+
+            // Update history ID for future syncs
+            result.historyId?.let { historyId ->
+                gmailSyncStateDao.updateSyncState(
+                    GmailSyncStateEntity(
+                        id = 1,
+                        historyId = historyId.toLong(),
+                        lastSyncTimestamp = System.currentTimeMillis()
+                    )
+                )
+                Log.d(TAG, "Updated history ID: $historyId")
+            }
+
+            // Convert to domain model
+            result.messages.map { gmailMessage ->
+                EmailMessage(
+                    id = 0, // Will be auto-generated
+                    messageId = gmailMessage.id,
+                    subject = gmailMessage.subject,
+                    sender = gmailMessage.from,
+                    receivedAt = gmailMessage.date,
+                    body = gmailMessage.body,
+                    processed = false,
+                    processedAt = null
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in fetchNewMessages: ${e.message}", e)
+            emptyList()
+        }
     }
 
     override fun getUnprocessedMessages(): Flow<List<EmailMessage>> {

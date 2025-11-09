@@ -38,4 +38,9 @@ object DatabaseModule {
     fun provideProcessingJobDao(database: MailFlowDatabase): ProcessingJobDao {
         return database.processingJobDao()
     }
+
+    @Provides
+    fun provideGmailSyncStateDao(database: MailFlowDatabase): GmailSyncStateDao {
+        return database.gmailSyncStateDao()
+    }
 }
