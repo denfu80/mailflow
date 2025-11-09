@@ -5,7 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sync
@@ -233,7 +233,7 @@ private fun EmailManagementBottomBar(
                         )
                     } else {
                         Icon(
-                            imageVector = Icons.Filled.CloudSync,
+                            imageVector = Icons.Filled.CloudDownload,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )

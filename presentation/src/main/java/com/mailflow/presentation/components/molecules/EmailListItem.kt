@@ -5,8 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.outlined.Circle
+import androidx.compose.material.icons.filled.FiberManualRecord
+import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -50,7 +50,7 @@ fun EmailListItem(
                 onClick = { onSelectionToggle(email.id) }
             ) {
                 Icon(
-                    imageVector = if (email.selected) Icons.Filled.CheckCircle else Icons.Outlined.Circle,
+                    imageVector = if (email.selected) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
                     contentDescription = if (email.selected) "Ausgewählt" else "Nicht ausgewählt",
                     tint = if (email.selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -103,7 +103,7 @@ fun EmailListItem(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Circle,
+                            imageVector = Icons.Filled.FiberManualRecord,
                             contentDescription = "TODO",
                             modifier = Modifier.size(12.dp),
                             tint = MaterialTheme.colorScheme.tertiary
