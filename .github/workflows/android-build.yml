@@ -37,11 +37,27 @@ jobs:
         run: |
           echo "GEMINI_API_KEY=dummy_key_for_ci" > local.properties
 
+      - name: Setup Gradle Properties for CI
+        run: |
+          mkdir -p ~/.gradle
+          echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+HeapDumpOnOutOfMemoryError" >> ~/.gradle/gradle.properties
+          echo "org.gradle.daemon=true" >> ~/.gradle/gradle.properties
+          echo "org.gradle.caching=true" >> ~/.gradle/gradle.properties
+          echo "org.gradle.parallel=true" >> ~/.gradle/gradle.properties
+
+      - name: Download Dependencies (with retry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: ./gradlew --no-daemon dependencies --refresh-dependencies
+
       - name: Run Unit Tests
-        run: ./gradlew test --stacktrace
+        run: ./gradlew test --stacktrace --no-daemon
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
@@ -86,8 +102,24 @@ jobs:
         run: |
           echo "GEMINI_API_KEY=dummy_key_for_ci" > local.properties
 
+      - name: Setup Gradle Properties for CI
+        run: |
+          mkdir -p ~/.gradle
+          echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+HeapDumpOnOutOfMemoryError" >> ~/.gradle/gradle.properties
+          echo "org.gradle.daemon=true" >> ~/.gradle/gradle.properties
+          echo "org.gradle.caching=true" >> ~/.gradle/gradle.properties
+          echo "org.gradle.parallel=true" >> ~/.gradle/gradle.properties
+
+      - name: Download Dependencies (with retry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: ./gradlew --no-daemon dependencies --refresh-dependencies
+
       - name: Run Lint
-        run: ./gradlew lint --stacktrace
+        run: ./gradlew lint --stacktrace --no-daemon
 
       - name: Upload Lint Reports
         if: always()
