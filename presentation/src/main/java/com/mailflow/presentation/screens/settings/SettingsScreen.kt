@@ -19,6 +19,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -28,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mailflow.domain.model.TodoBackendType
 import com.mailflow.presentation.components.molecules.SettingsItem
 import com.mailflow.presentation.theme.Spacing
 
@@ -42,6 +44,8 @@ fun SettingsScreen(
     val allSyncWork by viewModel.allSyncWork.collectAsStateWithLifecycle()
     val allProcessingWork by viewModel.allProcessingWork.collectAsStateWithLifecycle()
     val todoListName by viewModel.todoListName.collectAsStateWithLifecycle()
+    val todoBackendType by viewModel.todoBackendType.collectAsStateWithLifecycle()
+    val googleTasksListName by viewModel.googleTasksListName.collectAsStateWithLifecycle()
 
     val authHelper = viewModel.gmailAuthHelper
     Scaffold(
@@ -86,14 +90,81 @@ fun SettingsScreen(
                 modifier = Modifier.padding(Spacing.medium)
             )
 
-            OutlinedTextField(
-                value = todoListName,
-                onValueChange = viewModel::onTodoListNameChange,
-                label = { Text("Todo List Name/ID") },
+            // Backend Type Selection
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Spacing.medium)
-            )
+            ) {
+                Column(
+                    modifier = Modifier.padding(Spacing.medium)
+                ) {
+                    Text(
+                        text = "Todo Backend",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = Spacing.small)
+                    )
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = Spacing.extraSmall)
+                    ) {
+                        RadioButton(
+                            selected = todoBackendType == TodoBackendType.EXTERNAL_API,
+                            onClick = { viewModel.onTodoBackendTypeChange(TodoBackendType.EXTERNAL_API) }
+                        )
+                        Text(
+                            text = "External API (doeasy)",
+                            modifier = Modifier.padding(start = Spacing.small)
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = Spacing.extraSmall)
+                    ) {
+                        RadioButton(
+                            selected = todoBackendType == TodoBackendType.GOOGLE_TASKS,
+                            onClick = { viewModel.onTodoBackendTypeChange(TodoBackendType.GOOGLE_TASKS) }
+                        )
+                        Text(
+                            text = "Google Tasks",
+                            modifier = Modifier.padding(start = Spacing.small)
+                        )
+                    }
+                }
+            }
+
+            // Backend-specific configuration
+            when (todoBackendType) {
+                TodoBackendType.EXTERNAL_API -> {
+                    OutlinedTextField(
+                        value = todoListName,
+                        onValueChange = viewModel::onTodoListNameChange,
+                        label = { Text("Todo List Name/ID") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Spacing.medium)
+                            .padding(top = Spacing.medium)
+                    )
+                }
+                TodoBackendType.GOOGLE_TASKS -> {
+                    OutlinedTextField(
+                        value = googleTasksListName,
+                        onValueChange = viewModel::onGoogleTasksListNameChange,
+                        label = { Text("Google Tasks List Name") },
+                        supportingText = { Text("The name of your Google Tasks list (e.g., 'My Tasks')") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Spacing.medium)
+                            .padding(top = Spacing.medium)
+                    )
+                }
+            }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = Spacing.medium))
 

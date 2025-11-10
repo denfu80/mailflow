@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.google.signin)
     implementation(libs.google.api.client.android)
     implementation(libs.google.api.services.gmail)
+    implementation(libs.google.api.services.tasks)
     implementation(libs.google.http.client.android)
     implementation(libs.google.api.client.gson)
 
