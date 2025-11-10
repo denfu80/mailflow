@@ -87,15 +87,13 @@ fun EmailManagementScreen(
                 todoListName = todoListName
             )
         },
-        modifier = modifier
+        modifier = modifier,
+        contentWindowInsets = WindowInsets(0.dp)
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    top = paddingValues.calculateTopPadding(),
-                    bottom = maxOf(paddingValues.calculateBottomPadding(), 88.dp) // Ensure minimum bottom padding for our custom bottom bar
-                )
+                .padding(paddingValues)
         ) {
             when {
                 emails.isEmpty() -> {
@@ -211,6 +209,7 @@ private fun EmailManagementBottomBar(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars)
                 .padding(16.dp)
         ) {
             // First Row: Sync and Analyze buttons
