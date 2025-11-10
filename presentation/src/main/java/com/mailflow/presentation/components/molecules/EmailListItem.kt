@@ -5,8 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.FiberManualRecord
-import androidx.compose.material.icons.outlined.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Task
+import androidx.compose.material.icons.outlined.CheckBoxOutlineBlank
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -50,7 +50,7 @@ fun EmailListItem(
                 onClick = { onSelectionToggle(email.id) }
             ) {
                 Icon(
-                    imageVector = if (email.selected) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
+                    imageVector = if (email.selected) Icons.Filled.CheckCircle else Icons.Outlined.CheckBoxOutlineBlank,
                     contentDescription = if (email.selected) "Ausgewählt" else "Nicht ausgewählt",
                     tint = if (email.selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -89,7 +89,7 @@ fun EmailListItem(
                 )
 
                 // Show extracted TODO if available
-                if (!email.extractedTodos.isNullOrBlank()) {
+                email.extractedTodos?.takeIf { it.isNotBlank() }?.let { todoText ->
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Row(
@@ -103,9 +103,9 @@ fun EmailListItem(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.FiberManualRecord,
+                            imageVector = Icons.Filled.Task,
                             contentDescription = "TODO",
-                            modifier = Modifier.size(12.dp),
+                            modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.tertiary
                         )
 
@@ -119,7 +119,7 @@ fun EmailListItem(
                                 color = MaterialTheme.colorScheme.onTertiaryContainer
                             )
                             Text(
-                                text = email.extractedTodos,
+                                text = todoText,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
                                 maxLines = 2,
