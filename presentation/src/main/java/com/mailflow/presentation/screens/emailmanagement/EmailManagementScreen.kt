@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.ui.unit.max
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.PlayArrow
@@ -91,7 +92,10 @@ fun EmailManagementScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = maxOf(paddingValues.calculateBottomPadding(), 88.dp) // Ensure minimum bottom padding for our custom bottom bar
+                )
         ) {
             when {
                 emails.isEmpty() -> {
@@ -123,11 +127,6 @@ fun EmailManagementScreen(
                                 onSelectionToggle = viewModel::toggleEmailSelection,
                                 onAnalyze = viewModel::analyzeSingleEmail
                             )
-                        }
-
-                        // Add some bottom padding for the bottom bar
-                        item {
-                            Spacer(modifier = Modifier.height(16.dp))
                         }
                     }
                 }
