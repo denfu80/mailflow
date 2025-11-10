@@ -10,6 +10,15 @@ interface EmailMessageDao {
     @Query("SELECT * FROM email_messages WHERE processed = 0 ORDER BY receivedAt ASC")
     fun getUnprocessedMessages(): Flow<List<EmailMessageEntity>>
 
+    @Query("SELECT * FROM email_messages ORDER BY receivedAt DESC")
+    fun getAllMessages(): Flow<List<EmailMessageEntity>>
+
+    @Query("SELECT * FROM email_messages WHERE selected = 1 ORDER BY receivedAt DESC")
+    fun getSelectedMessages(): Flow<List<EmailMessageEntity>>
+
+    @Query("SELECT * FROM email_messages WHERE extractedTodos IS NOT NULL AND todosSynced = 0")
+    fun getMessagesWithUnsyncedTodos(): Flow<List<EmailMessageEntity>>
+
     @Query("SELECT * FROM email_messages WHERE messageId = :messageId")
     suspend fun getMessageByMessageId(messageId: String): EmailMessageEntity?
 
@@ -24,4 +33,13 @@ interface EmailMessageDao {
 
     @Query("UPDATE email_messages SET processed = 1, processedAt = :processedAt WHERE id = :messageId")
     suspend fun markMessageAsProcessed(messageId: Long, processedAt: Long = System.currentTimeMillis())
+
+    @Query("UPDATE email_messages SET selected = :selected WHERE id = :messageId")
+    suspend fun updateMessageSelection(messageId: Long, selected: Boolean)
+
+    @Query("UPDATE email_messages SET extractedTodos = :todos, processed = 1, processedAt = :processedAt WHERE id = :messageId")
+    suspend fun updateMessageWithTodos(messageId: Long, todos: String?, processedAt: Long = System.currentTimeMillis())
+
+    @Query("UPDATE email_messages SET todosSynced = 1 WHERE id = :messageId")
+    suspend fun markTodosAsSynced(messageId: Long)
 }

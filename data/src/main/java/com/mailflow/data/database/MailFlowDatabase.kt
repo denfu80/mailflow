@@ -11,7 +11,7 @@ import com.mailflow.data.model.*
         ProcessingJobEntity::class,
         GmailSyncStateEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 abstract class MailFlowDatabase : RoomDatabase() {

@@ -9,7 +9,8 @@ import androidx.room.Index
     tableName = "email_messages",
     indices = [
         Index(value = ["messageId"], unique = true),
-        Index(value = ["processed"])
+        Index(value = ["processed"]),
+        Index(value = ["selected"])
     ]
 )
 data class EmailMessageEntity(
@@ -21,5 +22,8 @@ data class EmailMessageEntity(
     val receivedAt: Long,
     val body: String,
     val processed: Boolean = false,
-    val processedAt: Long? = null
+    val processedAt: Long? = null,
+    val selected: Boolean = false,
+    val extractedTodos: String? = null,
+    val todosSynced: Boolean = false
 )

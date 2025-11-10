@@ -83,6 +83,24 @@ class EmailRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getAllMessages(): Flow<List<EmailMessage>> {
+        return dao.getAllMessages().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    override fun getSelectedMessages(): Flow<List<EmailMessage>> {
+        return dao.getSelectedMessages().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    override fun getMessagesWithUnsyncedTodos(): Flow<List<EmailMessage>> {
+        return dao.getMessagesWithUnsyncedTodos().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
     override suspend fun saveMessages(messages: List<EmailMessage>): Result<List<Long>> = withContext(ioDispatcher) {
         try {
             val ids = dao.insertMessages(messages.map { it.toEntity() })
@@ -101,6 +119,33 @@ class EmailRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun updateMessageSelection(messageId: Long, selected: Boolean): Result<Unit> = withContext(ioDispatcher) {
+        try {
+            dao.updateMessageSelection(messageId, selected)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateEmailWithTodos(messageId: Long, todos: String?): Result<Unit> = withContext(ioDispatcher) {
+        try {
+            dao.updateMessageWithTodos(messageId, todos)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun markTodosAsSynced(messageId: Long): Result<Unit> = withContext(ioDispatcher) {
+        try {
+            dao.markTodosAsSynced(messageId)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     private fun EmailMessageEntity.toDomain() = EmailMessage(
         id = id,
         messageId = messageId,
@@ -109,7 +154,10 @@ class EmailRepositoryImpl @Inject constructor(
         receivedAt = receivedAt,
         body = body,
         processed = processed,
-        processedAt = processedAt
+        processedAt = processedAt,
+        selected = selected,
+        extractedTodos = extractedTodos,
+        todosSynced = todosSynced
     )
 
     private fun EmailMessage.toEntity() = EmailMessageEntity(
@@ -120,7 +168,10 @@ class EmailRepositoryImpl @Inject constructor(
         receivedAt = receivedAt,
         body = body,
         processed = processed,
-        processedAt = processedAt
+        processedAt = processedAt,
+        selected = selected,
+        extractedTodos = extractedTodos,
+        todosSynced = todosSynced
     )
 }
 
