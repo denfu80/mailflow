@@ -112,7 +112,8 @@ fun EmailManagementScreen(
 
                     // Email List
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = Spacing.medium)
                     ) {
                         items(
                             items = emails,
@@ -123,11 +124,6 @@ fun EmailManagementScreen(
                                 onSelectionToggle = viewModel::toggleEmailSelection,
                                 onAnalyze = viewModel::analyzeSingleEmail
                             )
-                        }
-
-                        // Add some bottom padding for the bottom bar
-                        item {
-                            Spacer(modifier = Modifier.height(16.dp))
                         }
                     }
                 }
