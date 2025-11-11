@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo
 import com.mailflow.data.worker.WorkManagerHelper
+import com.mailflow.domain.repository.TodoRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +19,8 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val workManagerHelper: WorkManagerHelper,
     val gmailAuthHelper: com.mailflow.data.remote.gmail.GmailAuthHelper,
-    private val settingsDataStore: com.mailflow.data.preferences.SettingsDataStore
+    private val settingsDataStore: com.mailflow.data.preferences.SettingsDataStore,
+    private val todoRepository: TodoRepository
 ) : ViewModel() {
 
     val todoListName: StateFlow<String> = settingsDataStore.todoListName
@@ -27,6 +29,23 @@ class SettingsViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = "inbox-test"
         )
+
+    val todoListId: StateFlow<String?> = settingsDataStore.todoListId
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
+    val todoListUrl: StateFlow<String?> = settingsDataStore.todoListUrl
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
+    private val _listCreationStatus = MutableStateFlow<ListCreationStatus>(ListCreationStatus.Idle)
+    val listCreationStatus: StateFlow<ListCreationStatus> = _listCreationStatus.asStateFlow()
 
 
 
@@ -108,6 +127,34 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun onTodoListIdChange(newId: String?) {
+        viewModelScope.launch {
+            settingsDataStore.setTodoListId(newId)
+        }
+    }
+
+    fun createNewList() {
+        viewModelScope.launch {
+            _listCreationStatus.value = ListCreationStatus.Loading
+            val listName = todoListName.value
+            val result = todoRepository.createList(listName)
+            result.fold(
+                onSuccess = { listInfo ->
+                    _listCreationStatus.value = ListCreationStatus.Success(listInfo.url)
+                },
+                onFailure = { error ->
+                    _listCreationStatus.value = ListCreationStatus.Error(
+                        error.message ?: "Failed to create list"
+                    )
+                }
+            )
+        }
+    }
+
+    fun clearListCreationStatus() {
+        _listCreationStatus.value = ListCreationStatus.Idle
+    }
+
 
 
     fun triggerManualSync() {
@@ -152,4 +199,11 @@ sealed class WorkStatus {
 
     data class Failed(val error: String) : WorkStatus()
 
+}
+
+sealed class ListCreationStatus {
+    data object Idle : ListCreationStatus()
+    data object Loading : ListCreationStatus()
+    data class Success(val url: String?) : ListCreationStatus()
+    data class Error(val message: String) : ListCreationStatus()
 }
