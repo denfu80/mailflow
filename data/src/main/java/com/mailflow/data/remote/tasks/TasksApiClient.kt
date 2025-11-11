@@ -99,7 +99,7 @@ class TasksApiClient @Inject constructor(
                 TasksClient.GoogleTaskList(
                     id = taskList.id,
                     title = taskList.title ?: "Untitled",
-                    updated = taskList.updated?.getValue() ?: System.currentTimeMillis()
+                    updated = taskList.updated?.value ?: System.currentTimeMillis()
                 )
             } ?: emptyList()
 
@@ -141,9 +141,9 @@ class TasksApiClient @Inject constructor(
                     title = task.title ?: "",
                     notes = task.notes,
                     status = task.status,
-                    due = task.due?.getValue(),
-                    completed = task.completed?.getValue(),
-                    updated = task.updated?.getValue() ?: System.currentTimeMillis()
+                    due = task.due?.value,
+                    completed = task.completed?.value,
+                    updated = task.updated?.value ?: System.currentTimeMillis()
                 )
             } ?: emptyList()
 
