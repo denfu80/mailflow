@@ -27,6 +27,21 @@ class TasksApiClient @Inject constructor(
 
     companion object {
         private const val TAG = "TasksApiClient"
+
+        /**
+         * Safely extracts milliseconds from a DateTime object
+         * Handles both the getValue() method and value property access
+         */
+        private fun com.google.api.client.util.DateTime?.toMillis(): Long? {
+            if (this == null) return null
+            return try {
+                // Try to access the value field directly
+                this.value
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not extract milliseconds from DateTime: ${e.message}")
+                null
+            }
+        }
     }
 
     fun getSignInOptions(): GoogleSignInOptions {
@@ -99,7 +114,7 @@ class TasksApiClient @Inject constructor(
                 TasksClient.GoogleTaskList(
                     id = taskList.id,
                     title = taskList.title ?: "Untitled",
-                    updated = taskList.updated?.value ?: System.currentTimeMillis()
+                    updated = taskList.updated.toMillis() ?: System.currentTimeMillis()
                 )
             } ?: emptyList()
 
@@ -141,9 +156,9 @@ class TasksApiClient @Inject constructor(
                     title = task.title ?: "",
                     notes = task.notes,
                     status = task.status,
-                    due = task.due?.value,
-                    completed = task.completed?.value,
-                    updated = task.updated?.value ?: System.currentTimeMillis()
+                    due = task.due.toMillis(),
+                    completed = task.completed.toMillis(),
+                    updated = task.updated.toMillis() ?: System.currentTimeMillis()
                 )
             } ?: emptyList()
 
