@@ -19,6 +19,7 @@ android {
         }
 
         buildConfigField("String", "GEMINI_API_KEY", "\"${properties.getProperty("GEMINI_API_KEY", "")}\"")
+        buildConfigField("String", "BASE_URL", "\"${properties.getProperty("BASE_URL", "")}\"")
 
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
