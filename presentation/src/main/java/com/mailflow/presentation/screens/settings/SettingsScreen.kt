@@ -40,6 +40,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +49,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mailflow.presentation.components.molecules.SettingsItem
 import com.mailflow.presentation.theme.Spacing
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,6 +67,7 @@ fun SettingsScreen(
     val listCreationStatus by viewModel.listCreationStatus.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var showSuccessDialog by remember { mutableStateOf(false) }
     var successUrl by remember { mutableStateOf<String?>(null) }
@@ -117,7 +120,9 @@ fun SettingsScreen(
                     TextButton(
                         onClick = {
                             copyToClipboard(context, successUrl!!)
-                            snackbarHostState.showSnackbar("URL kopiert!")
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("URL kopiert!")
+                            }
                         }
                     ) {
                         Icon(
