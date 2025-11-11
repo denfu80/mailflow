@@ -20,6 +20,8 @@ class SettingsDataStore @Inject constructor(
 ) {
     private object PreferencesKeys {
         val TODO_LIST_NAME = stringPreferencesKey("todo_list_name")
+        val TODO_LIST_ID = stringPreferencesKey("todo_list_id")
+        val TODO_LIST_URL = stringPreferencesKey("todo_list_url")
     }
 
     val todoListName: Flow<String> = context.dataStore.data
@@ -27,9 +29,55 @@ class SettingsDataStore @Inject constructor(
             preferences[PreferencesKeys.TODO_LIST_NAME] ?: DEFAULT_TODO_LIST_NAME
         }
 
+    val todoListId: Flow<String?> = context.dataStore.data
+        .map { preferences ->
+            preferences[PreferencesKeys.TODO_LIST_ID]
+        }
+
+    val todoListUrl: Flow<String?> = context.dataStore.data
+        .map { preferences ->
+            preferences[PreferencesKeys.TODO_LIST_URL]
+        }
+
     suspend fun setTodoListName(name: String) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.TODO_LIST_NAME] = name
+        }
+    }
+
+    suspend fun setTodoListId(listId: String?) {
+        context.dataStore.edit { preferences ->
+            if (listId != null) {
+                preferences[PreferencesKeys.TODO_LIST_ID] = listId
+            } else {
+                preferences.remove(PreferencesKeys.TODO_LIST_ID)
+            }
+        }
+    }
+
+    suspend fun setTodoListUrl(url: String?) {
+        context.dataStore.edit { preferences ->
+            if (url != null) {
+                preferences[PreferencesKeys.TODO_LIST_URL] = url
+            } else {
+                preferences.remove(PreferencesKeys.TODO_LIST_URL)
+            }
+        }
+    }
+
+    suspend fun setTodoListInfo(listId: String?, url: String?) {
+        context.dataStore.edit { preferences ->
+            if (listId != null) {
+                preferences[PreferencesKeys.TODO_LIST_ID] = listId
+            } else {
+                preferences.remove(PreferencesKeys.TODO_LIST_ID)
+            }
+
+            if (url != null) {
+                preferences[PreferencesKeys.TODO_LIST_URL] = url
+            } else {
+                preferences.remove(PreferencesKeys.TODO_LIST_URL)
+            }
         }
     }
 
