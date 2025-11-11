@@ -11,6 +11,7 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.gmail.Gmail
 import com.google.api.services.gmail.GmailScopes
+import com.google.api.services.tasks.TasksScopes
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -32,7 +33,8 @@ class GmailApiClient @Inject constructor(
             .requestEmail()
             .requestScopes(
                 Scope(GmailScopes.GMAIL_READONLY),
-                Scope(GmailScopes.GMAIL_MODIFY)
+                Scope(GmailScopes.GMAIL_MODIFY),
+                Scope(TasksScopes.TASKS)
             )
             .build()
     }

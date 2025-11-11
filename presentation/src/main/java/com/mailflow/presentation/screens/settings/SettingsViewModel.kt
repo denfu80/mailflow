@@ -28,6 +28,20 @@ class SettingsViewModel @Inject constructor(
             initialValue = "inbox-test"
         )
 
+    val todoBackendType: StateFlow<com.mailflow.domain.model.TodoBackendType> = settingsDataStore.todoBackendType
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = com.mailflow.domain.model.TodoBackendType.EXTERNAL_API
+        )
+
+    val googleTasksListName: StateFlow<String> = settingsDataStore.googleTasksListName
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = "My Tasks"
+        )
+
 
 
     val syncWorkStatus: StateFlow<WorkStatus> = workManagerHelper.observeSyncWorkInfo()
@@ -105,6 +119,18 @@ class SettingsViewModel @Inject constructor(
     fun onTodoListNameChange(newName: String) {
         viewModelScope.launch {
             settingsDataStore.setTodoListName(newName)
+        }
+    }
+
+    fun onTodoBackendTypeChange(newType: com.mailflow.domain.model.TodoBackendType) {
+        viewModelScope.launch {
+            settingsDataStore.setTodoBackendType(newType)
+        }
+    }
+
+    fun onGoogleTasksListNameChange(newName: String) {
+        viewModelScope.launch {
+            settingsDataStore.setGoogleTasksListName(newName)
         }
     }
 
